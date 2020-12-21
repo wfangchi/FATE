@@ -79,6 +79,10 @@ class HeteroLRHost(HeteroLRBase):
         LOGGER.info("Enter hetero_logistic_regression host")
         self.header = self.get_header(data_instances)
 
+        use_sample_weight = self.get_use_sample_weight_flag()
+        if use_sample_weight:
+            self.gradient_loss_operator.set_use_sample_weight()
+
         classes = self.one_vs_rest_obj.get_data_classes(data_instances)
 
         if len(classes) > 2:
@@ -86,12 +90,6 @@ class HeteroLRHost(HeteroLRBase):
             self.need_call_back_loss = False
             self.one_vs_rest_fit(train_data=data_instances, validate_data=validate_data)
         else:
-            """
-            sample_weights = self.get_sample_weight()
-            if sample_weights:
-                self.gradient_loss_operator.set_use_sample_weight()
-                data_instances = data_instances.join(sample_weights, lambda d, w: self.load_sample_weight(d, w))
-            """
             self.need_one_vs_rest = False
             self.fit_binary(data_instances, validate_data)
 

@@ -154,6 +154,14 @@
       "dst": [
         "host"
       ]
+    },
+    "use_sample_weight": {
+      "src": [
+        "guest"
+      ],
+      "dst": [
+        "host"
+      ]
     }
   }
 }

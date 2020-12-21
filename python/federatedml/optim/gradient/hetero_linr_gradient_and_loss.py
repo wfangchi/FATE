@@ -37,12 +37,6 @@ class Guest(hetero_linear_model_gradient.Guest, loss_sync.Guest):
                                  transfer_variables.loss_intermediate)
 
     def compute_half_d(self, data_instances, w, cipher, batch_index, current_suffix):
-        """
-        if self.use_sample_weight:
-            self.half_d = data_instances.mapValues(
-                lambda v: (vec_dot(v.features, w.coef_) + w.intercept_) * v.weight - v.label * v.weight)
-        else:
-        """
         self.half_d = data_instances.mapValues(
             lambda v: vec_dot(v.features, w.coef_) + w.intercept_ - v.label)
         return self.half_d
@@ -52,15 +46,6 @@ class Guest(hetero_linear_model_gradient.Guest, loss_sync.Guest):
         """
         gradient = (1/N)*sum(wx - y) * x
         Define wx -y  as guest_forward and wx as host_forward
-        """
-        """if self.use_sample_weight:
-            weighted_host_forwards = []
-            host_forwards = self.get_host_forward(suffix=current_suffix)
-            for host_forward in host_forwards:
-                weighted_host_forward = host_forward.join(data_instances, lambda g, d: g * d.weight)
-                weighted_host_forwards.append(weighted_host_forward)
-
-        else:
         """
         self.host_forwards = self.get_host_forward(suffix=current_suffix)
         return self.host_forwards
@@ -96,7 +81,7 @@ class Guest(hetero_linear_model_gradient.Guest, loss_sync.Guest):
 
             wxy_square = self.half_d.mapValues(lambda x: np.square(x)).reduce(reduce_add)
 
-            loss_gh = self.half_d.join(host_forward, lambda g, h: g * h).reduce(reduce_add)
+            loss_gh = self.half_d.join(host_forward, lambda g, h: g + h).reduce(reduce_add)
             loss = (wxy_square + host_wx_square + 2 * loss_gh) / (2 * n)
             if loss_norm is not None:
                 loss = loss + loss_norm + host_loss_regular[0]

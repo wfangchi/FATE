@@ -68,6 +68,11 @@ class HeteroLRGuest(HeteroLRBase):
         self.check_abnormal_values(validate_data)
         self.header = self.get_header(data_instances)
 
+        use_sample_weight = self.check_use_sample_weight(data_instances)
+        self.send_use_sample_weight_flag(use_sample_weight)
+        if use_sample_weight:
+            self.gradient_loss_operator.set_use_sample_weight()
+
         classes = self.one_vs_rest_obj.get_data_classes(data_instances)
 
         if len(classes) > 2:
@@ -75,13 +80,6 @@ class HeteroLRGuest(HeteroLRBase):
             self.need_call_back_loss = False
             self.one_vs_rest_fit(train_data=data_instances, validate_data=validate_data)
         else:
-            """
-            sample_weights = self.check_and_remote_sample_weights(data_instances)
-            if sample_weights:
-                self.gradient_loss_operator.set_use_sample_weight()
-            """
-            if self.check_use_sample_weights(data_instances):
-                self.gradient_loss_operator.set_use_sample_weight()
             self.need_one_vs_rest = False
             self.fit_binary(data_instances, validate_data)
         LOGGER.debug(f"Final summary: {self.summary()}")

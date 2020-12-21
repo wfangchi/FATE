@@ -30,7 +30,7 @@ from federatedml.util import fate_operator
 
 class HeteroGradientBase(object):
     def __init__(self):
-        self.use_async = False
+        self.use_separate = False
         self.use_sample_weight = False
         self.fixed_float_precision = False
 
@@ -43,12 +43,13 @@ class HeteroGradientBase(object):
         """
         pass
 
-    def set_use_async(self):
-        self.use_async = True
+    def set_use_separate(self):
+        self.use_separate = True
 
     def set_use_sample_weight(self):
         self.use_sample_weight = True
-        self.use_async = False
+        self.use_separate = False
+        LOGGER.debug(f"set use_sample_weight to True")
 
     def set_fixed_float_precision(self):
         self.fixed_float_precision = True
@@ -243,7 +244,7 @@ class Guest(HeteroGradientBase):
             sample_count = data_instances.count()
             weight_adjust = sample_count / weight_sum
             fore_gradient = fore_gradient.join(data_instances,
-                                               lambda wx, d: d.weight * weight_adjust * wx - d.label * d.weight * weight_adjust)
+                                               lambda wx, d: d.weight * weight_adjust * wx)
         self.remote_fore_gradient(fore_gradient, suffix=current_suffix)
         unilateral_gradient = self.compute_gradient(data_instances, fore_gradient, model_weights.fit_intercept)
         return unilateral_gradient
@@ -268,11 +269,13 @@ class Guest(HeteroGradientBase):
         # Compute Guest's partial d
         self.compute_half_d(data_instances, model_weights, encrypted_calculator,
                             batch_index, current_suffix)
-        if self.use_async:
+        if self.use_separate:
+            LOGGER.debug(f"use separate gradient compute")
             unilateral_gradient = self._separately_compute_gradient(data_instances, model_weights,
                                                                     cipher=encrypted_calculator[batch_index],
                                                                     current_suffix=current_suffix)
         else:
+            LOGGER.debug(f"use centralized gradient compute")
             unilateral_gradient = self._centralized_compute_gradient(data_instances, model_weights,
                                                                      cipher=encrypted_calculator[batch_index],
                                                                      current_suffix=current_suffix)
@@ -317,11 +320,6 @@ class Host(HeteroGradientBase):
         raise NotImplementedError("Function should not be called here")
 
     def _separately_compute_gradient(self, data_instances, cipher, current_suffix):
-        """
-        if self.use_sample_weight:
-            encrypted_forward = self.forwards
-        else:
-        """
         encrypted_forward = cipher.encrypt(self.forwards)
         self.remote_host_forward(encrypted_forward, suffix=current_suffix)
 
@@ -332,11 +330,6 @@ class Host(HeteroGradientBase):
         return unilateral_gradient
 
     def _centralized_compute_gradient(self, data_instances, cipher, current_suffix):
-        """
-        if self.use_sample_weight:
-            encrypted_forward = self.forwards
-        else:
-        """
         encrypted_forward = cipher.encrypt(self.forwards)
         self.remote_host_forward(encrypted_forward, suffix=current_suffix)
 
@@ -360,7 +353,7 @@ class Host(HeteroGradientBase):
 
         self.forwards = self.compute_forwards(data_instances, model_weights)
 
-        if self.use_async:
+        if self.use_separate:
             unilateral_gradient = self._separately_compute_gradient(data_instances,
                                                                     encrypted_calculator[batch_index],
                                                                     current_suffix)

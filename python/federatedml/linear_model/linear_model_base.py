@@ -226,7 +226,8 @@ class BaseLinearModel(ModelBase):
                                 "a check for input data")
         LOGGER.info("Check for abnormal value passed")
 
-    def check_use_sample_weights(self, data_instances):
+    @staticmethod
+    def check_use_sample_weight(data_instances):
         one_sample = data_instances.first()[1]
         if one_sample.weight is None:
             LOGGER.debug("use sample weight is False")
@@ -234,36 +235,14 @@ class BaseLinearModel(ModelBase):
         LOGGER.debug("use sample weight is True")
         return True
 
-    """
-    def check_and_remote_sample_weights(self, data_instances):
-        # self.cipher_operator = self.cipher.gen_paillier_cipher_operator()
-        one_sample = data_instances.first()[1]
-        if one_sample.weight is None:
-            sample_weight_table = None
-        else:
-            if not self.cipher_operator:
-                raise ValueError("Cipher_operator does not exist when remoting sample weights")
-            # (weight, weight**2)
-            sample_weight_table = data_instances.mapValues(lambda x: (self.cipher_operator.encrypt(x.weight), self.cipher_operator.operator.encrpt(x.weight**2)))
-            LOGGER.debug(f"sample weight table raw is: {list(sample_weight_table.collect())}")
-        if not hasattr(self.transfer_variable, "sample_weights"):
-            return sample_weight_table
+    def send_use_sample_weight_flag(self, use_sample_weight):
+        try:
+           self.transfer_variable.use_sample_weight.remote(obj=use_sample_weight, role=consts.HOST, idx=-1)
+        except AttributeError:
+            LOGGER.warning(f"remote use_sample_weight is called on model without such transfer variable")
 
-        self.transfer_variable.sample_weights.remote(sample_weight_table, idx=-1, suffix=self.flowid)
-        LOGGER.debug(f"Remote sample weight table, table is: {list(sample_weight_table.collect())}")
-        return sample_weight_table
-
-
-    def get_sample_weight(self):
-        if not hasattr(self.transfer_variable, "sample_weights"):
-            return None
-        sample_table = self.transfer_variable.sample_weights.get(idx=0, suffix=self.flowid)
-        return sample_table
-
-    @staticmethod
-    def load_sample_weight(data_instance, weight):
-        weighted_data_instance = copy.deepcopy(data_instance)
-        weighted_data_instance.weight = weight
-        return weighted_data_instance
-
-    """
+    def get_use_sample_weight_flag(self):
+        try:
+            self.transfer_variable.use_sample_weight.get(idx=0)
+        except AttributeError:
+            LOGGER.warning(f"get use_sample_weight is called on model without such transfer variable")
