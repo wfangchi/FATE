@@ -108,11 +108,14 @@ class Guest(hetero_linear_model_gradient.Guest, loss_sync.Guest):
             wxg_wxh = half_wx.join(host_forward, lambda wxg, wxh: wxg * wxh).reduce(reduce_add)
             loss = np.log(2) - 0.5 * (1 / n) * ywx + 0.125 * (1 / n) * \
                    (self_wx_square + wx_square + 2 * wxg_wxh)
+            LOGGER.debug(f"loss_norm: {loss_norm}, host_loss_regular: {host_loss_regular}")
+
             if loss_norm is not None:
                 loss += loss_norm
                 loss += host_loss_regular[0]
             loss_list.append(loss)
         LOGGER.debug("In compute_loss, loss list are: {}".format(loss_list))
+        LOGGER.debug(f"loss_norm: {loss_norm}")
         self.sync_loss_info(loss_list, suffix=current_suffix)
 
     def compute_forward_hess(self, data_instances, delta_s, host_forwards):
