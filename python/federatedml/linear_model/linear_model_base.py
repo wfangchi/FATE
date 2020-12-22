@@ -227,23 +227,11 @@ class BaseLinearModel(ModelBase):
 
     @staticmethod
     def check_use_sample_weight(data_instances):
-        one_sample = data_instances.first()[1]
-        if one_sample.weight is None:
-            LOGGER.debug("use sample weight is False")
-            return False
-        LOGGER.debug("use sample weight is True")
-        return True
+        return data_overview.with_weight(data_instances)
 
     def send_use_sample_weight_flag(self, use_sample_weight):
-        try:
-            self.transfer_variable.use_sample_weight.remote(obj=use_sample_weight, role=consts.HOST, idx=-1)
-        except AttributeError:
-            LOGGER.warning(f"remote use_sample_weight is called on model without such transfer variable")
+        self.transfer_variable.use_sample_weight.remote(obj=use_sample_weight, role=consts.HOST, idx=-1)
 
     def get_use_sample_weight_flag(self):
-        try:
-            use_sample_weight = self.transfer_variable.use_sample_weight.get(idx=0)
-        except AttributeError:
-            LOGGER.warning(f"get use_sample_weight is called on model without such transfer variable")
-            use_sample_weight = False
+        use_sample_weight = self.transfer_variable.use_sample_weight.get(idx=0)
         return use_sample_weight
