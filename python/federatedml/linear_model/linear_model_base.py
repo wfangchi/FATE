@@ -16,7 +16,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-import copy
 import numpy as np
 
 from fate_flow.entity.metric import Metric
@@ -237,12 +236,14 @@ class BaseLinearModel(ModelBase):
 
     def send_use_sample_weight_flag(self, use_sample_weight):
         try:
-           self.transfer_variable.use_sample_weight.remote(obj=use_sample_weight, role=consts.HOST, idx=-1)
+            self.transfer_variable.use_sample_weight.remote(obj=use_sample_weight, role=consts.HOST, idx=-1)
         except AttributeError:
             LOGGER.warning(f"remote use_sample_weight is called on model without such transfer variable")
 
     def get_use_sample_weight_flag(self):
         try:
-            self.transfer_variable.use_sample_weight.get(idx=0)
+            use_sample_weight = self.transfer_variable.use_sample_weight.get(idx=0)
         except AttributeError:
             LOGGER.warning(f"get use_sample_weight is called on model without such transfer variable")
+            use_sample_weight = False
+        return use_sample_weight
