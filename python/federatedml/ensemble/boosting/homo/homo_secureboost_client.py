@@ -191,7 +191,10 @@ class HomoSecureBoostingTreeClient(HomoBoostingClient):
             feature_importance_param.append(FeatureImportanceInfo(sitename=self.role,
                                                                   fid=fid,
                                                                   importance=importance.importance,
-                                                                  fullname=self.feature_name_fid_mapping[fid]))
+                                                                  fullname=self.feature_name_fid_mapping[fid],
+                                                                  importance2=importance.importance_2,
+                                                                  main_type=importance.main_type
+                                                                  ))
         model_param.feature_importances.extend(feature_importance_param)
 
         model_param.feature_name_fid_mapping.update(self.feature_name_fid_mapping)
