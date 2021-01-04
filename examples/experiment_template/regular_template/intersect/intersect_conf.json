@@ -1,0 +1,57 @@
+{
+  "job_parameters": {
+    "work_mode": 1
+  },
+  "role_parameters": {
+    "host": {
+      "args": {
+        "data": {
+          "intersect_data": [
+            {
+              "name": "breast_hetero_guest",
+              "namespace": "experiment"
+            }
+          ]
+        }
+      }
+    },
+    "guest": {
+      "args": {
+        "data": {
+          "intersect_data": [
+            {
+              "name": "breast_hetero_host_tag_value",
+              "namespace": "experiment"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "role": {
+    "host": [
+      10000
+    ],
+    "guest": [
+      9999
+    ]
+  },
+  "initiator": {
+    "role": "guest",
+    "party_id": 9999
+  },
+  "algorithm_parameters": {
+    "intersect_0": {
+      "intersect_method": "raw",
+      "encode_params": {
+        "salt": "12345",
+        "base64": false,
+        "encode_method": "sha256"
+      },
+      "join_role": "host",
+      "only_output_key": false,
+      "sync_intersect_ids": true,
+      "with_encode": false
+    }
+  }
+}

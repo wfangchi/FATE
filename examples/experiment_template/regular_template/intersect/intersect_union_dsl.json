@@ -1,0 +1,50 @@
+{
+  "components": {
+    "intersect_0": {
+      "output": {
+        "data": [
+          "data"
+        ]
+      },
+      "input": {
+        "data": {
+          "data": [
+            "args.intersect_data_0"
+          ]
+        }
+      },
+      "module": "Intersection"
+    },
+    "intersect_1": {
+      "output": {
+        "data": [
+          "data"
+        ]
+      },
+      "input": {
+        "data": {
+          "data": [
+            "args.intersect_data_1"
+          ]
+        }
+      },
+      "module": "Intersection"
+    },
+    "union_0": {
+      "output": {
+        "data": [
+          "data"
+        ]
+      },
+      "input": {
+        "data": {
+          "data": [
+            "intersect_0.data",
+            "intersect_1.data"
+          ]
+        }
+      },
+      "module": "Union"
+    }
+  }
+}

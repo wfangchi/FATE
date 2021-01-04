@@ -1,0 +1,149 @@
+{
+  "components": {
+    "feature_scale_0": {
+      "output": {
+        "data": [
+          "train"
+        ],
+        "model": [
+          "feature_scale"
+        ]
+      },
+      "input": {
+        "data": {
+          "data": [
+            "hetero_feature_selection_0.train"
+          ]
+        }
+      },
+      "module": "FeatureScale",
+      "need_deploy": true
+    },
+    "hetero_lr_0": {
+      "output": {
+        "data": [
+          "train"
+        ],
+        "model": [
+          "hetero_lr"
+        ]
+      },
+      "input": {
+        "data": {
+          "train_data": [
+            "feature_scale_0.train"
+          ]
+        }
+      },
+      "module": "HeteroLR",
+      "need_deploy": true
+    },
+    "hetero_feature_binning_0": {
+      "output": {
+        "data": [
+          "transform_data"
+        ],
+        "model": [
+          "binning_model"
+        ]
+      },
+      "input": {
+        "data": {
+          "data": [
+            "intersection_0.train"
+          ]
+        }
+      },
+      "module": "HeteroFeatureBinning",
+      "need_deploy": false
+    },
+    "intersection_0": {
+      "output": {
+        "data": [
+          "train"
+        ]
+      },
+      "input": {
+        "data": {
+          "data": [
+            "dataio_0.train"
+          ]
+        }
+      },
+      "module": "Intersection",
+      "need_deploy": true
+    },
+    "statistic_0": {
+      "output": {
+        "data": [
+          "data"
+        ],
+        "model": [
+          "model"
+        ]
+      },
+      "input": {
+        "data": {
+          "data": [
+            "intersection_0.train"
+          ]
+        }
+      },
+      "module": "DataStatistics",
+      "need_deploy": false
+    },
+    "evaluation_0": {
+      "input": {
+        "data": {
+          "data": [
+            "hetero_lr_0.train"
+          ]
+        }
+      },
+      "module": "Evaluation",
+      "need_deploy": false
+    },
+    "dataio_0": {
+      "output": {
+        "data": [
+          "train"
+        ],
+        "model": [
+          "dataio"
+        ]
+      },
+      "input": {
+        "data": {
+          "data": [
+            "args.train_data"
+          ]
+        }
+      },
+      "module": "DataIO",
+      "need_deploy": true
+    },
+    "hetero_feature_selection_0": {
+      "output": {
+        "data": [
+          "train"
+        ],
+        "model": [
+          "selected"
+        ]
+      },
+      "input": {
+        "data": {
+          "data": [
+            "intersection_0.train"
+          ]
+        },
+        "isometric_model": [
+          "hetero_feature_binning_0.binning_model",
+          "statistic_0.model"
+        ]
+      },
+      "module": "HeteroFeatureSelection",
+      "need_deploy": true
+    }
+  }
+}

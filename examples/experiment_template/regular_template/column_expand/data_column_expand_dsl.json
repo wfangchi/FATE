@@ -1,0 +1,22 @@
+{
+  "components": {
+    "column_expand_0": {
+      "output": {
+        "data": [
+          "data"
+        ],
+        "model": [
+          "model"
+        ]
+      },
+      "input": {
+        "data": {
+          "data": [
+            "args.data"
+          ]
+        }
+      },
+      "module": "ColumnExpand"
+    }
+  }
+}

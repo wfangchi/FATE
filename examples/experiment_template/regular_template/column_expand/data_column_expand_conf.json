@@ -1,0 +1,47 @@
+{
+  "job_parameters": {
+    "work_mode": 1
+  },
+  "role_parameters": {
+    "guest": {
+      "args": {
+        "data": {
+          "data": [
+            {
+              "name": "breast_hetero_guest",
+              "namespace": "experiment"
+            }
+          ]
+        }
+      },
+      "column_expand_0": {
+        "method": [
+          "manual"
+        ],
+        "append_header": [
+          [
+            "x0"
+          ]
+        ],
+        "fill_value": [
+          [
+            1.0E-5
+          ]
+        ],
+        "need_run": [
+          true
+        ]
+      }
+    }
+  },
+  "role": {
+    "guest": [
+      9999
+    ]
+  },
+  "initiator": {
+    "role": "guest",
+    "party_id": 9999
+  },
+  "algorithm_parameters": {}
+}

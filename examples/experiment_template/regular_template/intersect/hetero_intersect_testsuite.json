@@ -1,0 +1,30 @@
+{
+    "data": [
+        {
+            "file": "examples/data/breast_hetero_guest.csv",
+            "head": 1,
+            "partition": 4,
+            "table_name": "breast_hetero_guest",
+            "namespace": "experiment",
+            "role": "guest_0"
+        },
+        {
+            "file": "examples/data/breast_hetero_host_tag_value.csv",
+            "head": 1,
+            "partition": 4,
+            "table_name": "breast_hetero_host_tag_value",
+            "namespace": "experiment",
+            "role": "host_0"
+        }
+    ],
+    "tasks": {
+        "intersect_single": {
+            "conf": "intersect_conf.json",
+            "dsl": "intersect_dsl.json"
+        },
+        "intersect_multi": {
+            "conf": "intersect_union_conf.json",
+            "dsl": "intersect_union_dsl.json"
+        }
+    }
+}
