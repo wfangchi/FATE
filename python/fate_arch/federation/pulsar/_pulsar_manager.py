@@ -15,6 +15,9 @@ logger = logging.getLogger()
 
 MAX_RETRIES = 10
 MAX_REDIRECT = 5
+BACKOFF_FACTOR = 1
+
+# sleep time equips to {BACKOFF_FACTOR} * (2 ** ({NUMBER_OF_TOTALRETRIES} - 1))
 
 CLUSTER = 'clusters/{}'
 TENANT = 'tenants/{}'
@@ -28,7 +31,7 @@ class PulsarManager():
     # create session is used to construct url and request parameters
     def _create_session(self):
         # retry mechanism refers to https://urllib3.readthedocs.io/en/latest/reference/urllib3.util.html#urllib3.util.Retry
-        retry = Retry(total=MAX_RETRIES, redirect=MAX_REDIRECT)
+        retry = Retry(total=MAX_RETRIES, redirect=MAX_REDIRECT, backoff_factor=BACKOFF_FACTOR)
         s = requests.Session()
         # initialize headers
         s.headers.update({'Content-Type': 'application/json'})
