@@ -15,19 +15,13 @@
 #
 
 import json
+import os
 import typing
 from collections import namedtuple
 from pathlib import Path
 
 from ruamel import yaml
 
-data_switch = False
-use_local_data = 1
-upload_dir = 'performance/hetero_task_upload_testsuite.json'
-intersect_dir = 'performance/hetero_task_intersect_single_testsuite.json'
-intersect_multi_dir = 'performance/hetero_task_intersect_multi_testsuite.json'
-hetero_lr_dir = 'performance/hetero_task_lr_testsuite.json'
-hetero_sbt_dir = 'performance/hetero_task_sbt_testsuite.json'
 temperate = """\
 # 0 for standalone, 1 for cluster
 work_mode: 0
@@ -35,9 +29,11 @@ work_mode: 0
 backend: 0
 # base dir for data upload conf eg, data_base_dir={FATE}
 # examples/data/breast_hetero_guest.csv -> $data_base_dir/examples/data/breast_hetero_guest.csv
-data_base_dir: ../../../../
+data_base_dir: path(FATE)
 # fate_test job Dedicated directory, File storage location,cache_directory={FATE}/examples/cache/
-cache_directory: /data/projects/fate/examples/cache/
+cache_directory: examples/cache/
+# Default performance directory={FATE}/examples/performance/
+performance_template_directory: examples/performance/
 clean_data: true
 parties:
   guest: [10000]
@@ -74,6 +70,9 @@ services:
 """
 
 _default_config = Path(__file__).parent.joinpath("fate_test_config.yaml").resolve()
+
+data_switch = None
+use_local_data = 1
 
 
 def create_config(path: Path, override=False):
@@ -138,10 +137,12 @@ class Config(object):
     tunnel = namedtuple("tunnel", ["ssh_address", "ssh_username", "ssh_password", "ssh_priv_key", "services_address"])
 
     def __init__(self, config):
-        self.cache_directory = config["cache_directory"]
         self.work_mode = config["work_mode"]
         self.backend = config["backend"]
         self.data_base_dir = config["data_base_dir"]
+        self.cache_directory = os.path.join(config["data_base_dir"], config["cache_directory"])
+        self.perf_template_dir = os.path.join(config["data_base_dir"], config["performance_template_directory"])
+        self.clean_data = config.get("clean_data", True)
         self.parties = Parties.from_dict(config["parties"])
         self.party_to_service_id = {}
         self.service_id_to_service = {}
@@ -186,7 +187,6 @@ class Config(object):
             with path.open("r") as f:
                 config.update(yaml.safe_load(f))
         config["data_base_dir"] = path.resolve().joinpath(config["data_base_dir"]).resolve()
-        config["cache_directory"] = path.resolve().joinpath(config["cache_directory"]).resolve()
         config.update(kwargs)
         return Config(config)
 

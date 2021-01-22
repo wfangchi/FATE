@@ -31,7 +31,8 @@ commands = {
 }
 
 commands_alias = {
-    "bq": "benchmark-quality"
+    "bq": "benchmark-quality",
+    "perf": "performance"
 }
 
 

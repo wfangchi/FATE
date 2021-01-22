@@ -18,7 +18,6 @@ import uuid
 from datetime import timedelta
 
 import click
-from fate_test import _config
 from fate_test._client import Clients
 from fate_test._config import Config
 from fate_test._flow_client import JobProgress, SubmitJobResponse, QueryJobResponse
@@ -38,21 +37,19 @@ from fate_test.scripts._utils import _load_testsuites, _upload_data, _delete_dat
               help="a json string represents mapping for replacing fields in data/conf/dsl")
 @click.option("-g", '--glob', type=str,
               help="glob string to filter sub-directory of path specified by <include>")
-@click.option('-u', '--use_local_data', type=int, default=1,
-              help="When guest, host and flow are deployed on the same machine, the parameter 0 is more appropriate")
-@click.option('-time', '--timeout', type=int, default=3600,
+@click.option('-m', '--timeout', type=int, default=3600,
               help="Task timeout duration")
-@click.option('-iter', '--max_iter', type=int, default=100,
+@click.option('-me', '--max_iter', type=int, default=100,
               help="When the algorithm model is LR, the number of iterations is set")
-@click.option('-depth', '--max_depth', type=int, default=4,
+@click.option('-d', '--max_depth', type=int, default=4,
               help="When the algorithm model is SecureBoost, set the number of model layers")
-@click.option('-trees', '--num_trees', type=int, default=100,
+@click.option('-n', '--num_trees', type=int, default=100,
               help="When the algorithm model is SecureBoost, set the number of trees")
-@click.option('-node', '--processors_per_node', type=int, default=4,
+@click.option('-p', '--processors_per_node', type=int, default=4,
               help="processors per node")
-@click.option('--update_job_parameters', default="{}", type=JSON_STRING,
+@click.option('-j', '--update_job_parameters', default="{}", type=JSON_STRING,
               help="a json string represents mapping for replacing fields in conf.job_parameters")
-@click.option('--update_component_parameters', default="{}", type=JSON_STRING,
+@click.option('-c', '--update_component_parameters', default="{}", type=JSON_STRING,
               help="a json string represents mapping for replacing fields in conf.component_parameters")
 @click.option("--skip-dsl-jobs", is_flag=True, default=False,
               help="skip dsl jobs defined in testsuite")
@@ -67,8 +64,8 @@ from fate_test.scripts._utils import _load_testsuites, _upload_data, _delete_dat
 @SharedOptions.get_shared_options(hidden=True)
 @click.pass_context
 def run_suite(ctx, replace, include, exclude, glob, timeout, update_job_parameters, update_component_parameters,
-              skip_dsl_jobs, skip_pipeline_jobs, skip_data, data_only, clean_data, use_local_data, max_iter, max_depth,
-              num_trees, processors_per_node, **kwargs):
+              skip_dsl_jobs, skip_pipeline_jobs, skip_data, data_only, clean_data, max_iter, max_depth, num_trees,
+              processors_per_node, **kwargs):
     """
     process testsuite
     """
@@ -82,9 +79,6 @@ def run_suite(ctx, replace, include, exclude, glob, timeout, update_job_paramete
     data_namespace_mangling = ctx.obj["namespace_mangling"]
     # prepare output dir and json hooks
     _add_replace_hook(replace)
-    if use_local_data not in [0, 1]:
-        raise Exception("'use_local_data 'can only be 0 or 1")
-    _config.use_local_data = use_local_data
     echo.welcome()
     echo.echo(f"testsuite namespace: {namespace}", fg='red')
     echo.echo("loading testsuites:")

@@ -50,12 +50,13 @@ class data_progress:
 
 
 def remove_file(path):
-    if os.path.exists(path) and os.path.isfile(path):
-        os.remove(path)
+    os.remove(path)
 
 
-def get_big_data(task, guest_data_size, host_data_size, guest_feature_num, host_feature_num, include_path, conf: Config,
-                 encryption_type, match_rate, sparsity):
+def get_big_data(guest_data_size, host_data_size, guest_feature_num, host_feature_num, include_path, host_data_type,
+                 conf: Config, encryption_type, match_rate, sparsity, force, split_host, output_path):
+    global big_data_dir
+
     def list_tag_value(feature_nums, head):
         data = ''
         for f in range(feature_nums):
@@ -87,8 +88,11 @@ def get_big_data(task, guest_data_size, host_data_size, guest_feature_num, host_
             output_data['feature'] = feature
             output_data.to_csv(data_path, mode='a+', index=False, header=False)
 
-    def _generate_label_data(data_path, data_num, id_value, feature_nums):
-        head_1 = ['id', 'y']
+    def _generate_label_data(data_path, data_num, id_value, feature_nums, label_flag):
+        if label_flag:
+            head_1 = ['id', 'y']
+        else:
+            head_1 = ['id']
         head_2 = ['x' + str(i) for i in range(feature_nums)]
         df_data_1 = pd.DataFrame(columns=head_1)
         head_data = pd.DataFrame(columns=head_1 + head_2)
@@ -99,14 +103,14 @@ def get_big_data(task, guest_data_size, host_data_size, guest_feature_num, host_
             progress.set_time_percent(batch)
             if section_data_size * (batch + 1) <= data_num:
                 df_data_1["id"] = id_value[section_data_size * batch: section_data_size * (batch + 1)]
-                df_data_1["y"] = [round(np.random.random()) for x in range(section_data_size)]
                 data_size = section_data_size
             elif section_data_size * batch < data_num:
                 df_data_1["id"] = id_value[section_data_size * batch: data_num]
                 data_size = data_num - section_data_size * batch
-                df_data_1["y"] = [round(np.random.random()) for x in range(data_size)]
             else:
                 break
+            if label_flag:
+                df_data_1["y"] = [round(np.random.random()) for x in range(data_size)]
             feature = np.random.randint(0, 100, size=[data_size, feature_nums]) / 100
             df_data_2 = pd.DataFrame(feature, columns=head_2)
             output_data = pd.concat([df_data_1, df_data_2], axis=1)
@@ -158,21 +162,32 @@ def get_big_data(task, guest_data_size, host_data_size, guest_feature_num, host_
             testsuite_config = json.load(f)
     else:
         raise Exception(f'Input file error, please check{include_path}.')
-    big_data_dir = conf.cache_directory
-    if not os.path.isdir(big_data_dir):
-        os.mkdir(big_data_dir)
+    try:
+        if output_path is not None:
+            big_data_dir = os.path.abspath(output_path)
+        else:
+            big_data_dir = os.path.abspath(conf.cache_directory)
+    except Exception:
+        raise Exception('{}path does not exist'.format(big_data_dir))
     date_set = [os.path.basename(upload_dict['file']) for upload_dict in testsuite_config['data']]
+    role_set = [upload_dict['role'] for upload_dict in testsuite_config['data']]
     data_count = 0
     for idx, data_name in enumerate(date_set):
-        if task == 'intersect_multi' and ('guest' in data_name or 'label' in data_name):
-            right = int(np.ceil(guest_data_size / len(date_set))) * (data_count + 1) if np.ceil(
-                guest_data_size / len(date_set)) * (data_count + 1) <= guest_data_size else guest_data_size
-            guest_id_list = guest_ids[int(np.ceil(guest_data_size / len(date_set))) * data_count: right]
+        label_flag = True if 'guest' in role_set[idx] else False
+        data_type = 'dense' if 'guest' in role_set[idx] else host_data_type
+        if split_host and ('host' in role_set[idx]):
+            right = int(np.ceil(host_data_size / len(date_set))) * (data_count + 1) if np.ceil(
+                host_data_size / len(date_set)) * (data_count + 1) <= host_data_size else host_data_size
+            host_id_list = host_ids[int(np.ceil(host_data_size / len(date_set))) * data_count: right]
             data_count += 1
         else:
-            guest_id_list = guest_ids
+            host_id_list = host_ids
         out_path = os.path.join(str(big_data_dir), data_name)
-        remove_file(out_path)
+        if os.path.exists(out_path) and os.path.isfile(out_path):
+            if force:
+                remove_file(out_path)
+            else:
+                raise Exception('{} Already exists'.format(out_path))
         data_i = (idx + 1) / len(date_set)
         downLoad = f'dataget  [{"#" * int(24 * data_i)}{"-" * (24 - int(24 * data_i))}]  {idx + 1}/{len(date_set)}'
         start = time.time()
@@ -180,16 +195,12 @@ def get_big_data(task, guest_data_size, host_data_size, guest_feature_num, host_
         thread = threading.Thread(target=run, args=[progress])
         thread.start()
         try:
-            if 'tag' in data_name and 'tag_value' not in data_name:
-                _generate_tag_data(out_path, host_data_size, host_ids, host_feature_num, sparsity)
-            elif 'tag_value' in data_name:
-                _generate_tag_value_data(out_path, host_data_size, host_ids, host_feature_num)
-            elif 'guest' in data_name or 'label' in data_name:
-                _generate_label_data(out_path, guest_data_size, guest_id_list, guest_feature_num)
-            else:
-                progress.set_switch(False)
-                raise Exception(
-                    f'The host file name contains "tag" or "tag_value", and the guest file name contains "guest" or "label". Please check your file name: {data_name}')
+            if data_type == 'tag':
+                _generate_tag_data(out_path, host_data_size, host_id_list, host_feature_num, sparsity)
+            elif data_type == 'tag_value':
+                _generate_tag_value_data(out_path, host_data_size, host_id_list, host_feature_num)
+            elif data_type == 'dense':
+                _generate_label_data(out_path, guest_data_size, guest_ids, guest_feature_num, label_flag)
             progress.set_switch(False)
             time.sleep(1)
             print()
