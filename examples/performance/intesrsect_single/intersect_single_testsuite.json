@@ -17,5 +17,10 @@
             "role": "host_0"
         }
     ],
-    "tasks": {}
+    "tasks": {
+        "intersect_single": {
+            "conf": "test_intersect_single_job_conf.json",
+            "dsl": "test_intersect_single_job_dsl.json"
+        }
+    }
 }
