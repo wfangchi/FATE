@@ -151,7 +151,7 @@ def generate(ctx, include, host_data_type, encryption_type, match_rate, sparsity
              host_data_size, guest_feature_num, host_feature_num, output_path, force, split_host, upload_data,
              remove_data, use_local_data, **kwargs):
     """
-    u
+    create data defined in suite config files
     """
     ctx.obj.update(**kwargs)
     ctx.obj.post_process()
