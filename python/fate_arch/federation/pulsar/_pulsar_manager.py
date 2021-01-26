@@ -24,10 +24,10 @@ TENANT = 'tenants/{}'
 
 # APIs are refer to https://pulsar.apache.org/admin-rest-api/?version=2.7.0&apiversion=v2
 
-
 class PulsarManager():
-    def __init__(self, address: str, port: str):
+    def __init__(self, address: str, port: str, runtime_config: dict ={}):
         self.service_url = "http://{}:{}/admin/v2/".format(address, port)
+        self.runtime_config = runtime_config
 
     # create session is used to construct url and request parameters
     def _create_session(self):
