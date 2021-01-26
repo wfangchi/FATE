@@ -23,6 +23,8 @@ from fate_flow.pipelined_model.model_storage_base import ModelStorageBase
 from fate_arch.common import log
 from fate_arch.common.base_utils import current_timestamp, serialize_b64, deserialize_b64
 from fate_arch.storage.metastore.base_model import LongTextField
+from fate_flow.utils.encrypt_utils import pwdecrypt
+from fate_arch.common.conf_utils import get_base_config
 
 LOGGER = log.getLogger()
 DB = PooledMySQLDatabase(None)
@@ -58,7 +60,7 @@ class MysqlModelStorage(ModelStorageBase):
                             model_in_table.f_create_time = current_timestamp()
                             model_in_table.f_model_id = model_id
                             model_in_table.f_model_version = model_version
-                            model_in_table.f_content = serialize_b64(content, to_str=True)
+                            model_in_table.f_content = serialize_b64(content)
                             model_in_table.f_size = sys.getsizeof(model_in_table.f_content)
                             model_in_table.f_slice_index = slice_index
                             if force_update:
@@ -117,6 +119,8 @@ class MysqlModelStorage(ModelStorageBase):
     def get_connection(self, config: dict):
         db_name = config["name"]
         config.pop("name")
+        if get_base_config('encrypt_password'):
+            config['passwd'] = pwdecrypt(get_base_config('prikeystr'), config.get('passwd'))
         DB.init(db_name, **config)
 
     def close_connection(self):
