@@ -180,6 +180,8 @@ class Federation(FederationABC):
         _name_dtype_keys = [_SPLIT_.join(
             [party.role, party.party_id, name]) for party in parties]
 
+        # tell the receiver what I going to send.
+
         if _name_dtype_keys[0] not in self._name_dtype_map:
             party_topic_infos = self._get_topic_infos(parties, dtype=NAME_DTYPE_TAG)
             channel_infos = self._get_channels(mq_names=mq_names)
