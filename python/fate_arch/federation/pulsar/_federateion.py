@@ -121,7 +121,7 @@ class Federation(FederationABC):
             [party.role, party.party_id, name]) for party in parties]
 
         if _name_dtype_keys[0] not in self._name_dtype_map:
-            topic_infos = self._get_topic_infos(parties, dtype=NAME_DTYPE_TAG)
+            topic_infos = self._get_party_topic_infos(parties, dtype=NAME_DTYPE_TAG)
             channel_infos = self._get_channels(topic_infos=topic_infos)
             rtn_dtype = []
             for i, info in enumerate(channel_infos):
@@ -140,7 +140,7 @@ class Federation(FederationABC):
         partitions = rtn_dtype.get("partitions", None)
 
         if dtype == FederationDataType.TABLE:
-            party_topic_info = self._get_topic_infos(
+            party_topic_info = self._get_party_topic_infos(
                 parties, name, partitions=partitions)
             for i in range(len(party_topic_info)):
                 party = parties[i]
@@ -162,8 +162,8 @@ class Federation(FederationABC):
                 LOGGER.debug(
                     f"[{log_str}]received rdd({i + 1}/{len(parties)}), party: {parties[i]} ")
         else:
-            mq_names = self._get_topic_infos(parties, name)
-            channel_infos = self._get_channels(mq_names=mq_names)
+            party_topic_infos = self._get_party_topic_infos(parties, name)
+            channel_infos = self._get_channels(party_topic_info=party_topic_infos)
             for i, info in enumerate(channel_infos):
                 obj = self._receive_obj(info, name, tag)
                 LOGGER.debug(
@@ -180,11 +180,11 @@ class Federation(FederationABC):
         _name_dtype_keys = [_SPLIT_.join(
             [party.role, party.party_id, name]) for party in parties]
 
-        # tell the receiver what I going to send.
+        # tell the receiver what sender is going to send.
 
         if _name_dtype_keys[0] not in self._name_dtype_map:
-            party_topic_infos = self._get_topic_infos(parties, dtype=NAME_DTYPE_TAG)
-            channel_infos = self._get_channels(mq_names=mq_names)
+            party_topic_infos = self._get_party_topic_infos(parties, dtype=NAME_DTYPE_TAG)
+            channel_infos = self._get_channels(party_topic_infos=party_topic_infos)
             if isinstance(v, Table):
                 body = {"dtype": FederationDataType.TABLE,
                         "partitions": v.partitions}
@@ -206,20 +206,20 @@ class Federation(FederationABC):
             LOGGER.debug(
                 f"[{log_str}]start to remote RDD, total_size={total_size}, partitions={partitions}")
 
-            party_topic_infos = self._get_topic_infos(
+            party_topic_infos = self._get_party_topic_infos(
                 parties, name, partitions=partitions)
             # add gc
             gc.add_gc_action(tag, v, '__del__', {})
 
             send_func = self._get_partition_send_func(name, tag, partitions, party_topic_infos, mq=self._mq,
                                                       maximun_message_size=self._max_message_size,
-                                                      connection_conf=self._rabbit_manager.runtime_config.get('connection', {}))
+                                                      connection_conf=self._pulsar_manager.runtime_config)
             # noinspection PyProtectedMember
             v._rdd.mapPartitionsWithIndex(send_func).count()
         else:
             LOGGER.debug(f"[{log_str}]start to remote obj")
-            mq_names = self._get_topic_infos(parties, name)
-            channel_infos = self._get_channels(mq_names=mq_names)
+            party_topic_infos = self._get_party_topic_infos(parties, name)
+            channel_infos = self._get_channels(party_topic_infos=party_topic_infos)
             self._send_obj(name=name, tag=tag, data=p_dumps(v),
                            channel_infos=channel_infos)
 
@@ -244,7 +244,7 @@ class Federation(FederationABC):
         vhost = f"{self._session_id}-{low.role}-{low.party_id}-{high.role}-{high.party_id}"
         return vhost
 
-    def _get_topic_infos(self, parties: typing.List[Party], name=None, partitions=None, dtype=None) -> typing.List:
+    def _get_party_topic_infos(self, parties: typing.List[Party], name=None, partitions=None, dtype=None) -> typing.List:
         topic_infos = [self._get_or_create_topic(
             party, name, partitions, dtype) for party in parties]
         
