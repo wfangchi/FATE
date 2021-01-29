@@ -47,6 +47,11 @@ class HeteroLinRHost(HeteroLinRBase):
 
         LOGGER.info("Enter hetero_linR host")
         self._abnormal_detection(data_instances)
+        sample_weights = self.get_sample_weight()
+
+        if sample_weights:
+            self.gradient_loss_operator.set_use_sample_weight()
+            data_instances = data_instances.mapValues(lambda v: self.load_sample_weight(v, sample_weights))
 
         self.validation_strategy = self.init_validation_strategy(data_instances, validate_data)
 
@@ -76,7 +81,7 @@ class HeteroLinRHost(HeteroLinRBase):
             batch_index = 0
             for batch_data in batch_data_generator:
                 batch_feat_inst = self.transform(batch_data)
-                optim_host_gradient, _ = self.gradient_loss_operator.compute_gradient_procedure(
+                optim_host_gradient = self.gradient_loss_operator.compute_gradient_procedure(
                     batch_feat_inst,
                     self.encrypted_calculator,
                     self.model_weights,

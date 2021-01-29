@@ -86,6 +86,11 @@ class HeteroLRHost(HeteroLRBase):
             self.need_call_back_loss = False
             self.one_vs_rest_fit(train_data=data_instances, validate_data=validate_data)
         else:
+            sample_weights = self.get_sample_weight()
+            if sample_weights:
+                self.gradient_loss_operator.set_use_sample_weight()
+                data_instances = data_instances.mapValues(lambda v: self.load_sample_weight(v, sample_weights))
+
             self.need_one_vs_rest = False
             self.fit_binary(data_instances, validate_data)
 
