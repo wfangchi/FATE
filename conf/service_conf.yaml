@@ -2,20 +2,20 @@ work_mode: 1
 use_registry: false
 fateflow:
   # you must set real ip address or 127.0.0.1, 0.0.0.0 is not supported
-  host: 127.0.0.1
+  host: 10.117.32.179
   http_port: 9380
   grpc_port: 9360
   # support rollsite or nginx as a coordinate proxy, rollsite recommended in the fate on eggroll, nginx is recommended in the fate on spark
   # format(proxy: rollsite) means rollsite use the rollsite configuration of fate_one_eggroll and nginx use the nginx configuration of fate_one_spark
   # you can customize the config by format(proxy:\n name: rollsite \n host: xx \n port: xx)
-  proxy: rollsite
+  proxy: nginx 
 fateboard:
   host: 127.0.0.1
   port: 8080
 database:
-  name: fate_flow
-  user: fate
-  passwd: fate
+  name: 'fate'
+  user: 'fate-dev'
+  passwd: 'fate-dev'
   host: 127.0.0.1
   port: 3306
   max_connections: 100
@@ -34,12 +34,12 @@ fate_on_spark:
     cores_per_node: 20
     nodes: 2
   hdfs:
-    name_node: hdfs://fate-cluster
+    name_node: hdfs://127.0.0.1:9000
     # default /
     path_prefix:
   rabbitmq:
-    host: 192.168.0.4
-    mng_port: 12345
+    host: 127.0.0.1
+    mng_port: 15672
     port: 5672
     user: fate
     password: fate
@@ -50,11 +50,11 @@ fate_on_spark:
     port: 9390
 model_store_address:
   storage: mysql
-  name: model
+  name: "fate"
   host: 127.0.0.1
   port: 3306
-  user: fate
-  passwd: fate
+  user: "fate-dev"
+  passwd: "fate-dev"
   max_connections: 10
   stale_timeout: 10
 servings:

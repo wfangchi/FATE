@@ -4,10 +4,14 @@
     "party_id": 10000
   },
   "job_parameters": {
-    "work_mode": 0,
-    "backend": 0,
+    "work_mode": 1,
+    "backend": 1,
     "eggroll_run": {
       "eggroll.session.processors.per.node": 2
+    },
+    "spark_run": {
+      "executor-memory": "4G",
+      "total-executor-cores": 4
     }
   },
   "role": {
@@ -36,7 +40,7 @@
   },
   "algorithm_parameters": {
     "secure_add_example_0": {
-      "partition": 48,
+      "partition": 4,
       "data_num": 1000
     }
   }
