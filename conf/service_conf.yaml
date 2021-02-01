@@ -48,6 +48,10 @@ fate_on_spark:
   nginx:
     host: 127.0.0.1
     port: 9390
+  pulsar:
+    host: 127.0.0.1
+    port: 6650
+    mng_port: 8080
 model_store_address:
   storage: mysql
   name: "fate"

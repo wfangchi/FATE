@@ -39,8 +39,9 @@ SUPPORT_BACKENDS_ENTRANCE = {
     "fate_on_spark": {
         EngineType.COMPUTING: (ComputingEngine.SPARK, "spark"),
         EngineType.STORAGE: (StorageEngine.HDFS, "hdfs"),
-        EngineType.FEDERATION: (FederationEngine.RABBITMQ, "rabbitmq"),
-    },
+        #EngineType.FEDERATION: (FederationEngine.RABBITMQ, "rabbitmq"),
+        EngineType.FEDERATION: (FederationEngine.PULSAR, "pulsar")
+    }
 }
 
 # upload data

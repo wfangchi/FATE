@@ -23,7 +23,6 @@ class Backend(IntEnum):
     def is_eggroll(self):
         return self.value == self.EGGROLL
 
-
 class EngineType(object):
     COMPUTING = "computing"
     STORAGE = "storage"

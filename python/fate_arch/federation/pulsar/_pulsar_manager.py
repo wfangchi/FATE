@@ -24,9 +24,10 @@ TENANT = 'tenants/{}'
 
 # APIs are refer to https://pulsar.apache.org/admin-rest-api/?version=2.7.0&apiversion=v2
 
+
 class PulsarManager():
-    def __init__(self, address: str, port: str, runtime_config: dict ={}):
-        self.service_url = "http://{}:{}/admin/v2/".format(address, port)
+    def __init__(self, host: str, port: str, runtime_config: dict = {}):
+        self.service_url = "http://{}:{}/admin/v2/".format(host, port)
         self.runtime_config = runtime_config
 
     # create session is used to construct url and request parameters
@@ -94,13 +95,13 @@ class PulsarManager():
         return data
 
     # service_url not need to provide "http://" prefix
-    def create_cluster(self, cluster_name: str, service_url: str, broker_url: str,
+    def create_cluster(self, cluster_name: str, broker_url: str, service_url: str = '',
                        proxy_url: str = '', proxy_protocol: str = "SNI", peer_cluster_names: list = [],
                        enable_tls: bool = False):
 
-        data = _construct_cluster_data(self, service_url, broker_url,
-                                       proxy_url, proxy_protocol, peer_cluster_names,
-                                       enable_tls)
+        data = self._construct_cluster_data(service_url, broker_url,
+                                            proxy_url, proxy_protocol, peer_cluster_names,
+                                            enable_tls)
 
         session = self._create_session()
 
@@ -108,13 +109,13 @@ class PulsarManager():
             self.service_url + CLUSTER.format(cluster_name), data=json.dumps(data))
         return response
 
-    def update_cluster(self, cluster_name: str, service_url: str, broker_url: str,
+    def update_cluster(self, cluster_name: str,  broker_url: str, service_url: str = '',
                        proxy_url: str = '', proxy_protocol: str = "SNI", peer_cluster_names: list = [],
                        enable_tls: bool = False):
 
-        data = _construct_cluster_data(self, service_url, broker_url,
-                                       proxy_url, proxy_protocol, peer_cluster_names,
-                                       enable_tls)
+        data = self._construct_cluster_data(service_url, broker_url,
+                                            proxy_url, proxy_protocol, peer_cluster_names,
+                                            enable_tls)
 
         session = self._create_session()
 
@@ -180,6 +181,7 @@ class PulsarManager():
         return response
 
 
+'''
 if __name__ == '__main__':
     pulsar_manager_a = PulsarManager('localhost', '8080')
     pulsar_manager_b = PulsarManager('localhost', '8081')
@@ -207,3 +209,4 @@ if __name__ == '__main__':
     response = pulsar_manager_b.create_namespace(
         'geo-tenant', 'geo-namespace', {'replication_clusters': ['cluster1', 'standalone']})
     print(response.text)
+'''

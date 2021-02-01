@@ -100,7 +100,7 @@ class JobController(object):
                     job_parameters.storage_engine = StorageEngine.STANDALONE
             elif backend == Backend.SPARK:
                 job_parameters.computing_engine = ComputingEngine.SPARK
-                job_parameters.federation_engine = FederationEngine.RABBITMQ
+                job_parameters.federation_engine = FederationEngine.PULSAR
                 job_parameters.storage_engine = StorageEngine.HDFS
                 # add mq info
                 federation_info = {}

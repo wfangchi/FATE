@@ -25,7 +25,8 @@ class Session(object):
             else:
                 return Session(ComputingEngine.STANDALONE, FederationEngine.STANDALONE)
         if backend == Backend.SPARK:
-            return Session(ComputingEngine.SPARK, FederationEngine.RABBITMQ)
+            # how to switch to pulsar ?
+            return Session(ComputingEngine.SPARK, FederationEngine.PULSAR)
 
     def __init__(self, computing_type: ComputingEngine,
                  federation_type: FederationEngine):
@@ -130,6 +131,20 @@ class Session(object):
                                                             party=parties_info.local_party,
                                                             runtime_conf=runtime_conf,
                                                             rabbitmq_config=service_conf)
+            return self
+        
+        ## Add pulsar support 
+        if self._federation_type == FederationEngine.PULSAR:
+            from fate_arch.computing.spark import CSession
+            from fate_arch.federation.pulsar import Federation
+
+            if not self.is_computing_valid or not isinstance(self._computing_session, CSession):
+                raise RuntimeError(f"require computing with type {ComputingEngine.SPARK} valid")
+
+            self._federation_session = Federation.from_conf(federation_session_id=federation_session_id,
+                                                            party=parties_info.local_party,
+                                                            runtime_conf=runtime_conf,
+                                                            pulsar_config=service_conf)
             return self
 
         if self._federation_type == FederationEngine.STANDALONE:
