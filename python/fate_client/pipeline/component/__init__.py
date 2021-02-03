@@ -1,6 +1,7 @@
 from pipeline.component.column_expand import ColumnExpand
 from pipeline.component.data_statistics import DataStatistics
 from pipeline.component.dataio import DataIO
+from pipeline.component.data_transform import DataTransform 
 from pipeline.component.evaluation import Evaluation
 from pipeline.component.hetero_data_split import HeteroDataSplit
 from pipeline.component.hetero_fast_secureboost import HeteroFastSecureBoost
@@ -27,6 +28,7 @@ from pipeline.component.sampler import FederatedSample
 from pipeline.component.scale import FeatureScale
 from pipeline.component.union import Union
 from pipeline.component.feldman_verifiable_sum import FeldmanVerifiableSum
+from pipeline.component.sample_weight import SampleWeight
 
 
 __all__ = ["DataStatistics", "DataIO", "Evaluation", "HeteroDataSplit",
@@ -35,5 +37,5 @@ __all__ = ["DataStatistics", "DataIO", "Evaluation", "HeteroDataSplit",
            "HeteroPearson", "HeteroPoisson", "HeteroSecureBoost", "HomoDataSplit",
            "HomoLR", "HomoNN", "HomoSecureBoost", "Intersection",
            "LocalBaseline", "OneHotEncoder", "PSI", "Reader", "Scorecard",
-           "FederatedSample", "FeatureScale", "Union", "ColumnExpand", "FeldmanVerifiableSum"]
-
+           "FederatedSample", "FeatureScale", "Union", "ColumnExpand", "FeldmanVerifiableSum",
+           "SampleWeight", "DataTransform"]
