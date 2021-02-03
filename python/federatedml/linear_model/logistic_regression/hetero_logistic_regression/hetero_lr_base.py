@@ -22,6 +22,7 @@ from federatedml.param.logistic_regression_param import HeteroLogisticParam
 from federatedml.protobuf.generated import lr_model_meta_pb2
 from federatedml.secureprotol import PaillierEncrypt
 from federatedml.transfer_variable.transfer_class.hetero_lr_transfer_variable import HeteroLRTransferVariable
+from federatedml.util.fixpoint_solver import FixedPointEncoder
 from federatedml.util import LOGGER
 from federatedml.util import consts
 
@@ -52,8 +53,10 @@ class HeteroLRBase(BaseLogisticRegression):
         if len(self.component_properties.host_party_idlist) == 1:
             self.gradient_loss_operator.set_use_async()
 
-        if self.model_param.fixed_float_precision:
-            self.gradient_loss_operator.set_fixed_float_precision()
+        self.fixed_point_encoder = None if params.floating_point_precision is None else FixedPointEncoder(
+            2**params.floating_point_precision)
+
+        self.gradient_loss_operator.set_fixed_float_precision(self.fixed_point_encoder)
 
         if params.optimizer == 'sqn':
             gradient_loss_operator = sqn_factory(self.role, params.sqn_param)

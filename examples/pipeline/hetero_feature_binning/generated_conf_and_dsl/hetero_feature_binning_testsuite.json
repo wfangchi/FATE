@@ -1,0 +1,197 @@
+{
+    "data": [
+        {
+            "file": "examples/data/breast_hetero_guest.csv",
+            "head": 1,
+            "partition": 16,
+            "table_name": "breast_hetero_guest",
+            "namespace": "experiment",
+            "role": "guest_0"
+        },
+        {
+            "file": "examples/data/default_credit_hetero_guest.csv",
+            "head": 1,
+            "partition": 16,
+            "table_name": "default_credit_hetero_guest",
+            "namespace": "experiment",
+            "role": "guest_0"
+        },
+        {
+            "file": "examples/data/breast_hetero_host.csv",
+            "head": 1,
+            "partition": 16,
+            "table_name": "breast_hetero_host",
+            "namespace": "experiment",
+            "role": "host_0"
+        },
+        {
+            "file": "examples/data/default_credit_hetero_host.csv",
+            "head": 1,
+            "partition": 16,
+            "table_name": "default_credit_hetero_host",
+            "namespace": "experiment",
+            "role": "host_0"
+        },
+        {
+            "file": "examples/data/breast_hetero_host.csv",
+            "head": 1,
+            "partition": 16,
+            "table_name": "breast_hetero_host",
+            "namespace": "experiment",
+            "role": "host_1"
+        },
+        {
+            "file": "examples/data/default_credit_hetero_host.csv",
+            "head": 1,
+            "partition": 16,
+            "table_name": "default_credit_hetero_host",
+            "namespace": "experiment",
+            "role": "host_1"
+        }
+    ],
+    "pipeline_tasks": {
+        "hetero-binning-large-bin": {
+            "script": "pipeline-hetero-binning-large-bin.py"
+        },
+        "hetero-binning-optim-gini": {
+            "script": "pipeline-hetero-binning-optim-gini.py"
+        },
+        "hetero-binning-optim-iv": {
+            "script": "pipeline-hetero-binning-optim-iv.py"
+        },
+        "hetero-binning-optim-ks": {
+            "script": "pipeline-hetero-binning-optim-ks.py"
+        },
+        "hetero-binning-bucket-binning": {
+            "script": "pipeline-hetero-binning-bucket-binning.py"
+        },
+        "hetero-binning-category-binning": {
+            "script": "pipeline-hetero-binning-category-binning.py"
+        },
+        "hetero-binning-multi-host-optimal": {
+            "script": "pipeline-hetero-binning-multi-host-optimal.py"
+        },
+        "hetero-binning-optim-chi-square": {
+            "script": "pipeline-hetero-binning-optim-chi-square.py"
+        },
+        "hetero-binning-sparse-optimal-gini": {
+            "script": "pipeline-hetero-binning-sparse-optimal-gini.py"
+        },
+        "hetero-binning-multi-host": {
+            "script": "pipeline-hetero-binning-multi-host.py"
+        },
+        "hetero-binning-sparse-bucket-binning": {
+            "script": "pipeline-hetero-binning-sparse-bucket-binning.py"
+        },
+        "hetero-binning-sparse-optimal-ks": {
+            "script": "pipeline-hetero-binning-sparse-optimal-ks.py"
+        },
+        "hetero-binning-sparse-optimal-iv": {
+            "script": "pipeline-hetero-binning-sparse-optimal-iv.py"
+        },
+        "hetero-binning-asymmetric": {
+            "script": "pipeline-hetero-binning-asymmetric.py"
+        },
+        "hetero-binning-woe-binning": {
+            "script": "pipeline-hetero-binning-woe-binning.py"
+        },
+        "hetero-binning-sparse-optimal-chi-square": {
+            "script": "pipeline-hetero-binning-sparse-optimal-chi-square.py"
+        },
+        "hetero-binning-skip-statistic": {
+            "script": "pipeline-hetero-binning-skip-statistic.py"
+        },
+        "hetero-binning-quantile-binning": {
+            "script": "pipeline-hetero-binning-quantile-binning.py"
+        },
+        "hetero-binning-multi-host-sparse-optimal": {
+            "script": "pipeline-hetero-binning-multi-host-sparse-optimal.py"
+        }
+    },
+    "tasks": {
+        "hetero_binning_large_bin": {
+            "conf": "hetero_binning_large_bin_conf.json",
+            "dsl": "hetero_binning_large_bin_dsl.json"
+        },
+        "hetero_binning_optim_gini": {
+            "conf": "hetero_binning_optim_gini_conf.json",
+            "dsl": "hetero_binning_optim_gini_dsl.json"
+        },
+        "hetero_binning_optim_iv": {
+            "conf": "hetero_binning_optim_iv_conf.json",
+            "dsl": "hetero_binning_optim_iv_dsl.json"
+        },
+        "hetero_binning_optim_ks": {
+            "conf": "hetero_binning_optim_ks_conf.json",
+            "dsl": "hetero_binning_optim_ks_dsl.json"
+        },
+        "hetero_binning_bucket_binning": {
+            "conf": "hetero_binning_bucket_binning_conf.json",
+            "dsl": "hetero_binning_bucket_binning_dsl.json"
+        },
+        "hetero_binning_category_binning": {
+            "conf": "hetero_binning_category_binning_conf.json",
+            "dsl": "hetero_binning_category_binning_dsl.json"
+        },
+        "hetero_binning_multi_host_optimal": {
+            "conf": "hetero_binning_multi_host_optimal_conf.json",
+            "dsl": "hetero_binning_multi_host_optimal_dsl.json"
+        },
+        "hetero_binning_optim_chi_square": {
+            "conf": "hetero_binning_optim_chi_square_conf.json",
+            "dsl": "hetero_binning_optim_chi_square_dsl.json"
+        },
+        "hetero_binning_sparse_optimal_gini": {
+            "conf": "hetero_binning_sparse_optimal_gini_conf.json",
+            "dsl": "hetero_binning_sparse_optimal_gini_dsl.json"
+        },
+        "hetero_binning_multi_host": {
+            "conf": "hetero_binning_multi_host_conf.json",
+            "dsl": "hetero_binning_multi_host_dsl.json"
+        },
+        "hetero_binning_sparse_bucket_binning": {
+            "conf": "hetero_binning_sparse_bucket_binning_conf.json",
+            "dsl": "hetero_binning_sparse_bucket_binning_dsl.json"
+        },
+        "hetero_binning_sparse_optimal_ks": {
+            "conf": "hetero_binning_sparse_optimal_ks_conf.json",
+            "dsl": "hetero_binning_sparse_optimal_ks_dsl.json"
+        },
+        "hetero_binning_sparse_optimal_iv": {
+            "conf": "hetero_binning_sparse_optimal_iv_conf.json",
+            "dsl": "hetero_binning_sparse_optimal_iv_dsl.json"
+        },
+        "hetero_binning_asymmetric": {
+            "conf": "hetero_binning_asymmetric_conf.json",
+            "dsl": "hetero_binning_asymmetric_dsl.json"
+        },
+        "hetero_binning_woe_binning": {
+            "conf": "hetero_binning_woe_binning_conf.json",
+            "dsl": "hetero_binning_woe_binning_dsl.json"
+        },
+        "hetero_binning_sparse_optimal_chi_square": {
+            "conf": "hetero_binning_sparse_optimal_chi_square_conf.json",
+            "dsl": "hetero_binning_sparse_optimal_chi_square_dsl.json"
+        },
+        "hetero_binning_skip_statistic": {
+            "conf": "hetero_binning_skip_statistic_conf.json",
+            "dsl": "hetero_binning_skip_statistic_dsl.json"
+        },
+        "hetero_binning_quantile_binning": {
+            "conf": "hetero_binning_quantile_binning_conf.json",
+            "dsl": "hetero_binning_quantile_binning_dsl.json"
+        },
+        "hetero_binning_multi_host_sparse_optimal": {
+            "conf": "hetero_binning_multi_host_sparse_optimal_conf.json",
+            "dsl": "hetero_binning_multi_host_sparse_optimal_dsl.json"
+        },
+        "quantile_binning": {
+            "conf": "quantile_binning_conf.json",
+            "dsl": "quantile_binning_dsl.json"
+        },
+        "quantile_binning_local_only": {
+            "conf": "quantile_binning_local_only_conf.json",
+            "dsl": "quantile_binning_local_only_dsl.json"
+        }
+    }
+}
