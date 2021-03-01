@@ -28,10 +28,38 @@
 import copy
 import json
 import os
+import typing
 
 from fate_flow.settings import stat_logger
 from fate_flow.utils import parameter_util
-from fate_flow.utils.dsl_exception import *
+from fate_flow.utils.dsl_exception import (
+    ComponentDuplicateError,
+    ComponentFieldNotExistError,
+    ComponentInputDataTypeError,
+    ComponentInputDataValueTypeError,
+    ComponentInputModelValueTypeError,
+    ComponentInputTypeError,
+    ComponentMultiMappingError,
+    ComponentNotExistError,
+    ComponentOutputKeyTypeError,
+    ComponentOutputTypeError,
+    DataInputComponentNotExistError,
+    DataInputNameNotExistError,
+    DataNotExistInSubmitConfError,
+    DegreeNotZeroError,
+    DeployComponentNotExistError,
+    DSLNotExistError,
+    LoopError,
+    ModeError,
+    ModelInputComponentNotExistError,
+    ModelInputNameNotExistError,
+    ModuleFieldNotExistError,
+    ModuleNotExistError,
+    NamingError,
+    NamingFormatError,
+    NamingIndexError,
+)
+from federatedml.util.component_properties import DSLConfigError
 
 
 class Component(object):
@@ -89,9 +117,9 @@ class Component(object):
 
 class BaseDSLParser(object):
     def __init__(self):
-        self.dsl = None
+        self.dsl: typing.Optional[typing.MutableMapping[str, typing.Any]] = None
         self.mode = "train"
-        self.components = []
+        self.components: typing.List[Component] = []
         self.component_name_index = {}
         self.component_upstream = []
         self.component_downstream = []
@@ -145,7 +173,7 @@ class BaseDSLParser(object):
         components_output = self._find_outputs()
 
         for name in self.component_name_index.keys():
-            idx = self.component_name_index.get(name)
+            idx = self.component_name_index[name]
             upstream_input = components_details.get(name).get("input")
             downstream_output = components_details.get(name).get("output", {})
 
@@ -189,9 +217,7 @@ class BaseDSLParser(object):
                                         other_info=input_model_name,
                                     )
 
-                                idx_dependendy = self.component_name_index.get(
-                                    module_name
-                                )
+                                idx_dependendy = self.component_name_index[module_name]
                                 self.component_downstream[idx_dependendy].append(name)
                                 self.component_upstream[idx].append(module_name)
                                 # self.component_upstream_model_relation_set.add((name, module_name))
@@ -253,7 +279,7 @@ class BaseDSLParser(object):
                                     other_info=input_data_name,
                                 )
 
-                            idx_dependendy = self.component_name_index.get(module_name)
+                            idx_dependendy = self.component_name_index[module_name]
                             self.component_downstream[idx_dependendy].append(name)
                             self.component_upstream[idx].append(module_name)
                             # self.component_upstream_data_relation_set.add((name, module_name))
@@ -266,7 +292,7 @@ class BaseDSLParser(object):
             if self.component_upstream[i]:
                 self.component_upstream[i] = list(set(self.component_upstream[i]))
                 self.in_degree[
-                    self.component_name_index.get(self.components[i].get_name())
+                    self.component_name_index[self.components[i].get_name()]
                 ] = len(self.component_upstream[i])
 
         self._check_dag_dependencies()
@@ -281,32 +307,26 @@ class BaseDSLParser(object):
         """
         init top input
         """
+        if version not in [1, 2]:
+            raise DSLConfigError(f"version: {version} not supported")
+
         for i in range(len(self.topo_rank)):
             idx = self.topo_rank[i]
             name = self.components[idx].get_name()
             if self.train_input_model.get(name, None) is None:
                 module = self.components[idx].get_module()
-                if version == 1:
-                    role_parameters = parameter_util.ParameterUtil.override_parameter(
-                        setting_conf_prefix,
-                        runtime_conf,
-                        module,
-                        name,
-                        redundant_param_check=redundant_param_check,
-                    )
-                else:
-                    role_parameters = parameter_util.ParameterUtilV2.override_parameter(
-                        setting_conf_prefix,
-                        runtime_conf,
-                        module,
-                        name,
-                        redundant_param_check=redundant_param_check,
-                    )
-
+                role_parameters = parameter_util.override_parameter(
+                    setting_conf_prefix,
+                    runtime_conf,
+                    module,
+                    name,
+                    version=version,
+                    redundant_param_check=redundant_param_check,
+                )
                 self.components[idx].set_role_parameters(role_parameters)
             else:
                 up_component = self.train_input_model.get(name)
-                up_idx = self.component_name_index.get(up_component)
+                up_idx = self.component_name_index[up_component]
                 self.components[idx].set_role_parameters(
                     self.components[up_idx].get_role_parameters()
                 )
@@ -321,7 +341,7 @@ class BaseDSLParser(object):
             if module_name not in self.component_name_index:
                 raise ValueError("{} module_name not find!".format(module_name))
 
-            idx = self.component_name_index.get(module_name)
+            idx = self.component_name_index[module_name]
 
             """add abnormal detection"""
             component_name = self.components[idx].get_name()
@@ -333,9 +353,9 @@ class BaseDSLParser(object):
             self.next_component_to_topo.add(component_name)
 
             for i in range(len(self.component_downstream[idx])):
-                downstream_idx = self.component_name_index.get(
+                downstream_idx = self.component_name_index[
                     self.component_downstream[idx][i]
-                )
+                ]
 
                 self.in_degree[downstream_idx] -= 1
 
@@ -348,7 +368,7 @@ class BaseDSLParser(object):
         if component_name not in self.component_name_index:
             raise ComponentNotExistError(component=component_name)
 
-        idx = self.component_name_index.get(component_name)
+        idx = self.component_name_index[component_name]
         return self.components[idx]
 
     def get_upstream_dependent_components(self, component_name):
@@ -357,7 +377,7 @@ class BaseDSLParser(object):
         ).get_upstream()
         dependent_components = []
         for up_cpn in dependent_component_names:
-            up_cpn_idx = self.component_name_index.get(up_cpn)
+            up_cpn_idx = self.component_name_index[up_cpn]
             dependent_components.append(self.components[up_cpn_idx])
 
         return dependent_components
@@ -417,7 +437,7 @@ class BaseDSLParser(object):
             self.topo_rank.append(idx)
 
             for down_name in self.component_downstream[idx]:
-                down_idx = self.component_name_index.get(down_name)
+                down_idx = self.component_name_index[down_name]
                 in_degree[down_idx] -= 1
 
                 if in_degree[down_idx] == 0:
@@ -472,7 +492,7 @@ class BaseDSLParser(object):
                         up_component_name = dataset.split(".", -1)[0]
                         if up_component_name == "args":
                             continue
-                        up_pos = self.component_name_index.get(up_component_name)
+                        up_pos = self.component_name_index[up_component_name]
                         up_component = self.components[up_pos]
                         data_name = dataset.split(".", -1)[1]
                         if up_component.get_output().get("data"):
@@ -508,7 +528,7 @@ class BaseDSLParser(object):
                             continue
 
                         model_name = model_dep.split(".", -1)[1]
-                        up_pos = self.component_name_index.get(up_component_name)
+                        up_pos = self.component_name_index[up_component_name]
                         up_component = self.components[up_pos]
                         if up_component.get_output().get("model"):
                             model_pos = (
@@ -578,7 +598,7 @@ class BaseDSLParser(object):
                         dependency_list[i]["component_need_run"][name] = False
                 else:
                     if self.train_input_model.get(name, None) is None:
-                        param_class = parameter_util.ParameterUtil.get_param_class_name(
+                        param_class = parameter_util.get_param_class_name(
                             self.setting_conf_prefix, module
                         )
                         for i in range(len(dependency_list)):
@@ -608,7 +628,7 @@ class BaseDSLParser(object):
         for idx in range(len(self.topo_rank)):
             vertex = self.topo_rank[idx]
             for down_name in self.component_downstream[vertex]:
-                down_vertex = self.component_name_index.get(down_name)
+                down_vertex = self.component_name_index[down_name]
                 max_depth[down_vertex] = max(
                     max_depth[down_vertex], max_depth[vertex] + 1
                 )
@@ -619,7 +639,7 @@ class BaseDSLParser(object):
 
         for component in self.components:
             name = component.get_name()
-            vertex = self.component_name_index.get(name)
+            vertex = self.component_name_index[name]
             hierarchical_structure[max_depth[vertex]].append(name)
 
             name_component_maps[name] = component
@@ -859,7 +879,7 @@ class BaseDSLParser(object):
                     output_data_maps[name][output_data_str] = [up_input_data]
                 elif (
                     self.components[
-                        self.component_name_index.get(up_input_data_component_name)
+                        self.component_name_index[up_input_data_component_name]
                     ].get_module()
                     == "Reader"
                 ):
@@ -885,7 +905,7 @@ class BaseDSLParser(object):
         role_predict_dsl = copy.deepcopy(self.predict_dsl)
         component_list = list(self.predict_dsl.get("components").keys())
         for component in component_list:
-            idx = self.component_name_index.get(component)
+            idx = self.component_name_index[component]
             role_parameters = self.components[idx].get_role_parameters()
             if role in role_parameters:
                 role_predict_dsl["components"][component]["CodePath"] = role_parameters[
@@ -999,7 +1019,7 @@ class DSLParser(BaseDSLParser):
         setting_conf_prefix=None,
         mode="train",
         *args,
-        **kwargs
+        **kwargs,
     ):
 
         if mode not in ["train", "predict"]:
@@ -1019,7 +1039,7 @@ class DSLParser(BaseDSLParser):
                 self.runtime_conf
             )
         else:
-            predict_runtime_conf = parameter_util.ParameterUtil.merge_dict(
+            predict_runtime_conf = parameter_util._merge_dict(
                 pipeline_runtime_conf, runtime_conf
             )
             self._init_component_setting(
@@ -1081,7 +1101,7 @@ class DSLParser(BaseDSLParser):
         role_predict_dsl = copy.deepcopy(self.predict_dsl)
         component_list = list(self.predict_dsl.get("components").keys())
         for component in component_list:
-            idx = self.component_name_index.get(component)
+            idx = self.component_name_index[component]
             role_parameters = self.components[idx].get_role_parameters()
             if role in role_parameters:
                 role_predict_dsl["components"][component]["CodePath"] = role_parameters[
@@ -1190,7 +1210,7 @@ class DSLParserV2(BaseDSLParser):
         setting_conf_prefix=None,
         mode="train",
         *args,
-        **kwargs
+        **kwargs,
     ):
 
         if mode not in ["train", "predict"]:
@@ -1212,7 +1232,7 @@ class DSLParserV2(BaseDSLParser):
                 self.runtime_conf
             )
         else:
-            predict_runtime_conf = parameter_util.ParameterUtilV2.merge_dict(
+            predict_runtime_conf = parameter_util._merge_dict(
                 pipeline_runtime_conf, runtime_conf
             )
             self._init_component_setting(
@@ -1251,7 +1271,7 @@ class DSLParserV2(BaseDSLParser):
         role_predict_dsl = copy.deepcopy(predict_dsl)
         component_list = list(predict_dsl.get("components").keys())
         for component in component_list:
-            code_path = parameter_util.ParameterUtilV2.get_code_path(
+            code_path = parameter_util.get_code_path(
                 role=role,
                 module=predict_dsl["components"][component]["module"],
                 module_alias=component,
