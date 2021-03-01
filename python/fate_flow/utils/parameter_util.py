@@ -43,13 +43,23 @@ class BaseParameterUtil(object):
         return ret_dict
 
     @staticmethod
-    def _override_parameter(setting_conf_prefix=None, submit_dict=None, module=None,
-                            module_alias=None, version=1, redundant_param_check=True):
+    def _override_parameter(
+        setting_conf_prefix=None,
+        submit_dict=None,
+        module=None,
+        module_alias=None,
+        version=1,
+        redundant_param_check=True,
+    ):
 
-        _module_setting = BaseParameterUtil.get_setting_conf(setting_conf_prefix, module, module_alias)
+        _module_setting = BaseParameterUtil.get_setting_conf(
+            setting_conf_prefix, module, module_alias
+        )
 
         param_class_path = _module_setting["param_class"]
-        param_class, param_obj = BaseParameterUtil.get_param_object(param_class_path, module, module_alias)
+        param_class, param_obj = BaseParameterUtil.get_param_object(
+            param_class_path, module, module_alias
+        )
 
         default_runtime_dict = BaseParameterUtil.change_object_to_dict(param_obj)
 
@@ -71,10 +81,12 @@ class BaseParameterUtil(object):
             # if not _role_setting:
             #     continue
 
-            _code_path = BaseParameterUtil.get_code_path(module_setting=_module_setting,
-                                                     role=role,
-                                                     module=module,
-                                                     module_alias=module_alias)
+            _code_path = BaseParameterUtil.get_code_path(
+                module_setting=_module_setting,
+                role=role,
+                module=module,
+                module_alias=module_alias,
+            )
             if not _code_path:
                 del role_on_module[role]
                 continue
@@ -90,21 +102,28 @@ class BaseParameterUtil(object):
 
                 role_param_obj = copy.deepcopy(param_obj)
 
-                common_parameters = submit_dict.get("component_parameters", {}).get("common", {}) if version == 2 \
+                common_parameters = (
+                    submit_dict.get("component_parameters", {}).get("common", {})
+                    if version == 2
                     else submit_dict.get("algorithm_parameters", {})
+                )
                 if module_alias in common_parameters:
                     parameters = common_parameters.get(module_alias)
-                    merge_dict = BaseParameterUtil.merge_parameters(runtime_dict[param_class],
-                                                                parameters,
-                                                                role_param_obj,
-                                                                component=module_alias,
-                                                                module=module,
-                                                                version=version,
-                                                                redundant_param_check=redundant_param_check)
+                    merge_dict = BaseParameterUtil.merge_parameters(
+                        runtime_dict[param_class],
+                        parameters,
+                        role_param_obj,
+                        component=module_alias,
+                        module=module,
+                        version=version,
+                        redundant_param_check=redundant_param_check,
+                    )
                     runtime_dict[param_class] = merge_dict
 
                 if version == 2:
-                    component_parameters = submit_dict.get("component_parameters", {}).get("role", {})
+                    component_parameters = submit_dict.get(
+                        "component_parameters", {}
+                    ).get("role", {})
                     role_parameters = component_parameters.get(role, {})
                     role_idxs = role_parameters.keys()
                     for role_id in role_idxs:
@@ -113,16 +132,18 @@ class BaseParameterUtil(object):
 
                             if module_alias in role_dict:
                                 parameters = role_dict.get(module_alias)
-                                merge_dict = BaseParameterUtil.merge_parameters(runtime_dict[param_class],
-                                                                            parameters,
-                                                                            role_param_obj,
-                                                                            role_id,
-                                                                            role,
-                                                                            role_num=len(partyid_list),
-                                                                            component=module_alias,
-                                                                            module=module,
-                                                                            version=version,
-                                                                            redundant_param_check=redundant_param_check)
+                                merge_dict = BaseParameterUtil.merge_parameters(
+                                    runtime_dict[param_class],
+                                    parameters,
+                                    role_param_obj,
+                                    role_id,
+                                    role,
+                                    role_num=len(partyid_list),
+                                    component=module_alias,
+                                    module=module,
+                                    version=version,
+                                    redundant_param_check=redundant_param_check,
+                                )
 
                                 runtime_dict[param_class] = merge_dict
 
@@ -130,30 +151,32 @@ class BaseParameterUtil(object):
                     role_dict = submit_dict.get("role_parameters", {}).get(role, {})
                     if module_alias in role_dict:
                         role_parameters = role_dict.get(module_alias)
-                        merge_dict = BaseParameterUtil.merge_parameters(runtime_dict[param_class],
-                                                                    role_parameters,
-                                                                    role_param_obj,
-                                                                    idx,
-                                                                    role,
-                                                                    role_num=len(partyid_list),
-                                                                    component=module_alias,
-                                                                    module=module,
-                                                                    version=version,
-                                                                    redundant_param_check=redundant_param_check)
+                        merge_dict = BaseParameterUtil.merge_parameters(
+                            runtime_dict[param_class],
+                            role_parameters,
+                            role_param_obj,
+                            idx,
+                            role,
+                            role_num=len(partyid_list),
+                            component=module_alias,
+                            module=module,
+                            version=version,
+                            redundant_param_check=redundant_param_check,
+                        )
                         runtime_dict[param_class] = merge_dict
 
                 try:
                     role_param_obj.check()
                 except Exception as e:
-                    raise ParameterCheckError(component=module_alias, module=module, other_info=e)
+                    raise ParameterCheckError(
+                        component=module_alias, module=module, other_info=e
+                    )
 
-                runtime_dict['local'] = submit_dict.get('local', {})
-                my_local = {
-                    "role": role, "party_id": partyid_list[idx]
-                }
-                runtime_dict['local'].update(my_local)
-                runtime_dict['CodePath'] = _code_path
-                runtime_dict['module'] = module
+                runtime_dict["local"] = submit_dict.get("local", {})
+                my_local = {"role": role, "party_id": partyid_list[idx]}
+                runtime_dict["local"].update(my_local)
+                runtime_dict["CodePath"] = _code_path
+                runtime_dict["module"] = module
 
                 runtime_role_parameters[role].append(runtime_dict)
 
@@ -164,8 +187,19 @@ class BaseParameterUtil(object):
         return runtime_role_parameters
 
     @classmethod
-    def merge_parameters(cls, runtime_dict, role_parameters, param_obj, idx=-1, role=None, role_num=0, component=None,
-                         module=None, version=1, redundant_param_check=True):
+    def merge_parameters(
+        cls,
+        runtime_dict,
+        role_parameters,
+        param_obj,
+        idx=-1,
+        role=None,
+        role_num=0,
+        component=None,
+        module=None,
+        version=1,
+        redundant_param_check=True,
+    ):
         param_variables = param_obj.__dict__
         for key, val_list in role_parameters.items():
             if not redundant_param_check:
@@ -173,7 +207,9 @@ class BaseParameterUtil(object):
                     continue
 
             if key not in param_variables:
-                raise RedundantParameterError(component=component, module=module, other_info=key)
+                raise RedundantParameterError(
+                    component=component, module=module, other_info=key
+                )
 
             attr = getattr(param_obj, key)
             if type(attr).__name__ in dir(builtins) or not attr:
@@ -193,16 +229,18 @@ class BaseParameterUtil(object):
                 if key not in runtime_dict:
                     runtime_dict[key] = {}
 
-                runtime_dict[key] = BaseParameterUtil.merge_parameters(runtime_dict.get(key),
-                                                                   val_list,
-                                                                   attr,
-                                                                   idx,
-                                                                   role=role,
-                                                                   role_num=role_num,
-                                                                   component=component,
-                                                                   module=module,
-                                                                   version=version,
-                                                                   redundant_param_check=redundant_param_check)
+                runtime_dict[key] = BaseParameterUtil.merge_parameters(
+                    runtime_dict.get(key),
+                    val_list,
+                    attr,
+                    idx,
+                    role=role,
+                    role_num=role_num,
+                    component=component,
+                    module=module,
+                    version=version,
+                    redundant_param_check=redundant_param_check,
+                )
                 setattr(param_obj, key, attr)
 
         return runtime_dict
@@ -239,9 +277,17 @@ class BaseParameterUtil(object):
         return _module_setting
 
     @staticmethod
-    def get_code_path(role=None, setting_conf_prefix=None, module=None, module_alias=None, module_setting=None):
+    def get_code_path(
+        role=None,
+        setting_conf_prefix=None,
+        module=None,
+        module_alias=None,
+        module_setting=None,
+    ):
         if not module_setting:
-            _module_setting = BaseParameterUtil.get_setting_conf(setting_conf_prefix, module, module_alias)
+            _module_setting = BaseParameterUtil.get_setting_conf(
+                setting_conf_prefix, module, module_alias
+            )
         else:
             _module_setting = module_setting
 
@@ -256,7 +302,9 @@ class BaseParameterUtil(object):
         if not _role_setting:
             return None
 
-        _code_path = os.path.join(_module_setting.get('module_path'), _role_setting.get('program'))
+        _code_path = os.path.join(
+            _module_setting.get("module_path"), _role_setting.get("program")
+        )
 
         return _code_path
 
@@ -264,16 +312,24 @@ class BaseParameterUtil(object):
     def get_param_object(cls, param_class_path, module, module_alias):
         param_class = param_class_path.split("/", -1)[-1]
 
-        param_module_path = ".".join(param_class_path.split("/", -1)[:-1]).replace(".py", "")
+        param_module_path = ".".join(param_class_path.split("/", -1)[:-1]).replace(
+            ".py", ""
+        )
         if not importlib.util.find_spec(param_module_path):
-            raise ParamClassNotExistError(component=module_alias, module=module,
-                                          other_info="{} does not exist".format(param_module_path))
+            raise ParamClassNotExistError(
+                component=module_alias,
+                module=module,
+                other_info="{} does not exist".format(param_module_path),
+            )
 
         param_module = importlib.import_module(param_module_path)
 
         if getattr(param_module, param_class) is None:
-            raise ParamClassNotExistError(component=module_alias, module=module,
-                                          other_info="{} does not exist is {}".format(param_class, param_module))
+            raise ParamClassNotExistError(
+                component=module_alias,
+                module=module,
+                other_info="{} does not exist is {}".format(param_class, param_module),
+            )
 
         param_obj = getattr(param_module, param_class)()
 
@@ -305,15 +361,22 @@ class BaseParameterUtil(object):
 
 class ParameterUtil(BaseParameterUtil):
     @staticmethod
-    def override_parameter(setting_conf_prefix=None, submit_dict=None, module=None,
-                           module_alias=None, redundant_param_check=True):
+    def override_parameter(
+        setting_conf_prefix=None,
+        submit_dict=None,
+        module=None,
+        module_alias=None,
+        redundant_param_check=True,
+    ):
 
-        return ParameterUtil()._override_parameter(setting_conf_prefix=setting_conf_prefix,
-                                                   submit_dict=submit_dict,
-                                                   module=module,
-                                                   module_alias=module_alias,
-                                                   version=1,
-                                                   redundant_param_check=redundant_param_check)
+        return ParameterUtil()._override_parameter(
+            setting_conf_prefix=setting_conf_prefix,
+            submit_dict=submit_dict,
+            module=module,
+            module_alias=module_alias,
+            version=1,
+            redundant_param_check=redundant_param_check,
+        )
 
     @classmethod
     def get_args_input(cls, submit_dict, module="args"):
@@ -341,18 +404,16 @@ class ParameterUtil(BaseParameterUtil):
                     datalist = dataset[data_key]
 
                     if len(datalist) != len(partyid_list):
-                        raise RoleParameterNotConsistencyError(role=role, parameter=data_key)
+                        raise RoleParameterNotConsistencyError(
+                            role=role, parameter=data_key
+                        )
 
                     args_datakey.add(data_key)
 
                     for i in range(len(datalist)):
-                        value = datalist[i];
+                        value = datalist[i]
                         if len(args_input[role]) <= i:
-                            args_input[role].append({module:
-                                                         {"data":
-                                                              {}
-                                                          }
-                                                     })
+                            args_input[role].append({module: {"data": {}}})
 
                         args_input[role][i][module]["data"][data_key] = value
 
@@ -364,25 +425,38 @@ class ParameterUtil(BaseParameterUtil):
         job_parameters = submit_dict.get("job_parameters", {})
         for role in submit_dict["role"]:
             partyid_list = submit_dict["role"][role]
-            ret[role] = {party_id: copy.deepcopy(job_parameters) for party_id in partyid_list}
+            ret[role] = {
+                party_id: copy.deepcopy(job_parameters) for party_id in partyid_list
+            }
 
         return ret
 
 
 class ParameterUtilV2(BaseParameterUtil):
     @classmethod
-    def override_parameter(cls, setting_conf_prefix=None, submit_dict=None, module=None,
-                           module_alias=None, redundant_param_check=True):
-        return ParameterUtil._override_parameter(setting_conf_prefix=setting_conf_prefix,
-                                                 submit_dict=submit_dict,
-                                                 module=module,
-                                                 module_alias=module_alias,
-                                                 version=2,
-                                                 redundant_param_check=redundant_param_check)
+    def override_parameter(
+        cls,
+        setting_conf_prefix=None,
+        submit_dict=None,
+        module=None,
+        module_alias=None,
+        redundant_param_check=True,
+    ):
+        return ParameterUtil._override_parameter(
+            setting_conf_prefix=setting_conf_prefix,
+            submit_dict=submit_dict,
+            module=module,
+            module_alias=module_alias,
+            version=2,
+            redundant_param_check=redundant_param_check,
+        )
 
     @classmethod
     def get_input_parameters(cls, submit_dict, components=None):
-        if submit_dict.get("component_parameters", {}).get("role") is None or components is None:
+        if (
+            submit_dict.get("component_parameters", {}).get("role") is None
+            or components is None
+        ):
             return {}
 
         roles = submit_dict["component_parameters"]["role"].keys()
@@ -396,7 +470,9 @@ class ParameterUtilV2(BaseParameterUtil):
             cpn_dict[reader_cpn] = {}
         for role in roles:
             role_parameters = submit_dict["component_parameters"]["role"][role]
-            input_parameters[role] = [copy.deepcopy(cpn_dict) for i in range(len(submit_dict["role"][role]))]
+            input_parameters[role] = [
+                copy.deepcopy(cpn_dict) for i in range(len(submit_dict["role"][role]))
+            ]
 
             for idx in role_parameters.keys():
                 parameters = role_parameters[idx]
@@ -426,7 +502,10 @@ class ParameterUtilV2(BaseParameterUtil):
         for role in submit_dict["role"]:
             partyid_list = submit_dict["role"][role]
             if not role_job_parameters:
-                ret[role] = {party_id: copy.deepcopy(common_job_parameters) for party_id in partyid_list}
+                ret[role] = {
+                    party_id: copy.deepcopy(common_job_parameters)
+                    for party_id in partyid_list
+                }
                 continue
 
             ret[role] = {}
@@ -435,7 +514,9 @@ class ParameterUtilV2(BaseParameterUtil):
                 parameters = copy.deepcopy(common_job_parameters)
                 for role_id in role_idxs:
                     if role_id == "all" or str(idx) in role_id.split("|"):
-                        parameters = ParameterUtilV2.merge_dict(parameters, role_job_parameters.get(role, {})[role_id])
+                        parameters = ParameterUtilV2.merge_dict(
+                            parameters, role_job_parameters.get(role, {})[role_id]
+                        )
 
                 ret[role][partyid_list[idx]] = parameters
 
