@@ -153,7 +153,7 @@ class ParameterUtilV2(object):
                 parameters = copy.deepcopy(common_job_parameters)
                 for role_id in role_idxs:
                     if role_id == "all" or str(idx) in role_id.split("|"):
-                        parameters = _merge_dict(
+                        parameters = merge_dict_recursive(
                             parameters, role_job_parameters.get(role, {})[role_id]
                         )
 
@@ -169,12 +169,15 @@ def override_parameter(
     module_alias,
     version,
     redundant_param_check,
-):
+) -> typing.MutableMapping[str, typing.List[typing.MutableMapping[str, typing.Any]]]:
+    """
+    return runtime role parameters
+    """
 
-    _module_setting = get_setting_conf(setting_conf_prefix, module, module_alias)
+    _module_setting = _get_setting_conf(setting_conf_prefix, module, module_alias)
 
     param_class_path = _module_setting["param_class"]
-    param_class, param_obj = get_param_object(param_class_path, module, module_alias)
+    param_class, param_obj = _get_param_object(param_class_path, module, module_alias)
 
     default_runtime_dict = _convert_object_as_dict(param_obj)
 
@@ -183,19 +186,8 @@ def override_parameter(
 
     runtime_role_parameters = {}
 
-    _support_rols = _module_setting["role"].keys()
     role_on_module = copy.deepcopy(submit_dict["role"])
     for role in submit_dict["role"]:
-        # _role_setting = None
-        # for _rolelist in _support_rols:
-        #     if role not in _rolelist.split("|"):
-        #         continue
-        #     else:
-        #         _role_setting = _module_setting["role"].get(_rolelist)
-
-        # if not _role_setting:
-        #     continue
-
         _code_path = get_code_path(
             module_setting=_module_setting,
             role=role,
@@ -205,7 +197,6 @@ def override_parameter(
         if not _code_path:
             del role_on_module[role]
             continue
-        # _code_path = os.path.join(_module_setting.get('module_path'), _role_setting.get('program'))
         partyid_list = submit_dict["role"][role]
         runtime_role_parameters[role] = []
 
@@ -304,7 +295,70 @@ def override_parameter(
     return runtime_role_parameters
 
 
+def get_param_class_name(setting_conf_prefix, module):
+    _module_setting_path = os.path.join(setting_conf_prefix, module + ".json")
+    _module_setting = None
+    with open(_module_setting_path, "r") as fin:
+        _module_setting = json.loads(fin.read())
+
+    param_class_path = _module_setting["param_class"]
+    param_class = param_class_path.split("/", -1)[-1]
+
+    return param_class
+
+
+def get_code_path(
+    role=None,
+    setting_conf_prefix=None,
+    module=None,
+    module_alias=None,
+    module_setting=None,
+):
+    if not module_setting:
+        _module_setting = _get_setting_conf(setting_conf_prefix, module, module_alias)
+    else:
+        _module_setting = module_setting
+
+    _support_roles = _module_setting["role"].keys()
+    _role_setting = None
+    for _rolelist in _support_roles:
+        if role not in _rolelist.split("|"):
+            continue
+        else:
+            _role_setting = _module_setting["role"].get(_rolelist)
+
+    if not _role_setting:
+        return None
+
+    _code_path = os.path.join(
+        _module_setting.get("module_path"), _role_setting.get("program")
+    )
+
+    return _code_path
+
+
+def merge_dict_recursive(dict1: dict, dict2: dict):
+    """
+    merge dict recursive
+
+    Notes: dict2 first
+    """
+    merged = copy.deepcopy(dict2)
+    for key, value in dict1.items():
+        if key not in dict2:
+            # new key for dict2, add
+            merged[key] = copy.deepcopy(value)
+        elif isinstance(value, dict):
+            # common key with dict value, merge
+            merged[key] = merge_dict_recursive(value, dict2[key])
+        # common key with non-dict value, preserve value in dict2
+    return merged
+
+
 def _convert_object_as_dict(obj):
+    """
+    convert object as dict in recursive
+    """
     ret_dict = {}
 
     variable_dict = obj.__dict__
@@ -316,6 +370,60 @@ def _convert_object_as_dict(obj):
             ret_dict[variable] = attr
 
     return ret_dict
+
+
+def _get_param_object(param_class_path, module, module_alias):
+    param_class = param_class_path.split("/", -1)[-1]
+
+    param_module_path = ".".join(param_class_path.split("/", -1)[:-1]).replace(
+        ".py", ""
+    )
+    if not importlib.util.find_spec(param_module_path):
+        raise ParamClassNotExistError(
+            component=module_alias,
+            module=module,
+            other_info="{} does not exist".format(param_module_path),
+        )
+
+    param_module = importlib.import_module(param_module_path)
+
+    if getattr(param_module, param_class) is None:
+        raise ParamClassNotExistError(
+            component=module_alias,
+            module=module,
+            other_info="{} does not exist is {}".format(param_class, param_module),
+        )
+
+    param_obj = getattr(param_module, param_class)()
+
+    return param_class, param_obj
+
+
+def _get_setting_conf(setting_conf_prefix, module, module_alias):
+    """
+    get setting conf of federatedml module
+    """
+    # TODO: support extension
+    # roadmap
+    # 1. treat `setting_conf_prefix` as a single file indicate where to find real setting conf directories
+    # 2. use `enterpoint` and `pkg_resourece` to support extension
+    #
+    _module_setting_path = os.path.join(setting_conf_prefix, module + ".json")
+    if not os.path.isfile(_module_setting_path):
+        raise ModuleNotExistError(component=module_alias, module=module)
+
+    _module_setting = None
+    fin = None
+    try:
+        fin = open(_module_setting_path, "r")
+        _module_setting = json.loads(fin.read())
+    except Exception as e:
+        raise ModuleConfigError(component=module_alias, module=module, other_info=e)
+    finally:
+        if fin:
+            fin.close()
+
+    return _module_setting
 
 
 def _merge_parameters(
@@ -374,110 +482,3 @@ def _merge_parameters(
             setattr(param_obj, key, attr)
 
     return runtime_dict
-
-
-def get_param_class_name(setting_conf_prefix, module):
-    _module_setting_path = os.path.join(setting_conf_prefix, module + ".json")
-    _module_setting = None
-    with open(_module_setting_path, "r") as fin:
-        _module_setting = json.loads(fin.read())
-
-    param_class_path = _module_setting["param_class"]
-    param_class = param_class_path.split("/", -1)[-1]
-
-    return param_class
-
-
-def get_setting_conf(setting_conf_prefix, module, module_alias):
-    _module_setting_path = os.path.join(setting_conf_prefix, module + ".json")
-    if not os.path.isfile(_module_setting_path):
-        raise ModuleNotExistError(component=module_alias, module=module)
-
-    _module_setting = None
-    fin = None
-    try:
-        fin = open(_module_setting_path, "r")
-        _module_setting = json.loads(fin.read())
-    except Exception as e:
-        raise ModuleConfigError(component=module_alias, module=module, other_info=e)
-    finally:
-        if fin:
-            fin.close()
-
-    return _module_setting
-
-
-def get_code_path(
-    role=None,
-    setting_conf_prefix=None,
-    module=None,
-    module_alias=None,
-    module_setting=None,
-):
-    if not module_setting:
-        _module_setting = get_setting_conf(setting_conf_prefix, module, module_alias)
-    else:
-        _module_setting = module_setting
-
-    _support_roles = _module_setting["role"].keys()
-    _role_setting = None
-    for _rolelist in _support_roles:
-        if role not in _rolelist.split("|"):
-            continue
-        else:
-            _role_setting = _module_setting["role"].get(_rolelist)
-
-    if not _role_setting:
-        return None
-
-    _code_path = os.path.join(
-        _module_setting.get("module_path"), _role_setting.get("program")
-    )
-
-    return _code_path
-
-
-def get_param_object(param_class_path, module, module_alias):
-    param_class = param_class_path.split("/", -1)[-1]
-
-    param_module_path = ".".join(param_class_path.split("/", -1)[:-1]).replace(
-        ".py", ""
-    )
-    if not importlib.util.find_spec(param_module_path):
-        raise ParamClassNotExistError(
-            component=module_alias,
-            module=module,
-            other_info="{} does not exist".format(param_module_path),
-        )
-
-    param_module = importlib.import_module(param_module_path)
-
-    if getattr(param_module, param_class) is None:
-        raise ParamClassNotExistError(
-            component=module_alias,
-            module=module,
-            other_info="{} does not exist is {}".format(param_class, param_module),
-        )
-
-    param_obj = getattr(param_module, param_class)()
-
-    return param_class, param_obj
-
-
-def _merge_dict(dict1, dict2):
-    merge_ret = {}
-    keyset = dict1.keys() | dict2.keys()
-    for key in keyset:
-        if key in dict1 and key in dict2:
-            val1 = dict1.get(key)
-            val2 = dict2.get(key)
-            if isinstance(val1, dict):
-                merge_ret[key] = _merge_dict(val1, val2)
-            else:
-                merge_ret[key] = val2
-        elif key in dict1:
-            merge_ret[key] = dict1.get(key)
-        else:
-            merge_ret[key] = dict2.get(key)
-
-    return merge_ret

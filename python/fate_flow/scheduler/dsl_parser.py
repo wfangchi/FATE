@@ -995,21 +995,6 @@ class DSLParser(BaseDSLParser):
         dsl_parser._init_components(mode=mode, version=1)
         dsl_parser._find_dependencies(mode=mode, version=1)
 
-    # @staticmethod
-    # def deploy_component(components, train_dsl):
-    #     training_cpns = set(train_dsl.get("components").keys())
-    #     deploy_cpns = set(components)
-    #     if len(deploy_cpns & training_cpns) != len(deploy_cpns):
-    #         raise DeployComponentNotExistError(msg=deploy_cpns - training_cpns)
-
-    #     dsl_parser = DSLParser()
-    #     dsl_parser.dsl = train_dsl
-    #     dsl_parser._init_components()
-    #     dsl_parser._find_dependencies()
-    #     dsl_parser._auto_deduction(deploy_cpns=deploy_cpns)
-
-    #     return dsl_parser.predict_dsl
-
     def run(
         self,
         pipeline_dsl=None,
@@ -1039,7 +1024,7 @@ class DSLParser(BaseDSLParser):
                 self.runtime_conf
             )
         else:
-            predict_runtime_conf = parameter_util._merge_dict(
+            predict_runtime_conf = parameter_util.merge_dict_recursive(
                 pipeline_runtime_conf, runtime_conf
             )
             self._init_component_setting(
@@ -1232,7 +1217,7 @@ class DSLParserV2(BaseDSLParser):
                 self.runtime_conf
             )
         else:
-            predict_runtime_conf = parameter_util._merge_dict(
+            predict_runtime_conf = parameter_util.merge_dict_recursive(
                 pipeline_runtime_conf, runtime_conf
             )
             self._init_component_setting(
