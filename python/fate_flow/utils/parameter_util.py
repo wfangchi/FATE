@@ -32,6 +32,7 @@ from fate_flow.utils.dsl_exception import (
     RoleParameterNotListError,
     SubmitConfNotExistError,
 )
+from ruamel import yaml
 
 
 class ParameterUtil(object):
@@ -296,11 +297,9 @@ def override_parameter(
 
 
 def get_param_class_name(setting_conf_prefix, module):
-    _module_setting_path = os.path.join(setting_conf_prefix, module + ".json")
-    _module_setting = None
-    with open(_module_setting_path, "r") as fin:
-        _module_setting = json.loads(fin.read())
-
+    _module_setting = _get_setting_conf(
+        setting_conf_prefix=setting_conf_prefix, module=module, module_alias=module
+    )
     param_class_path = _module_setting["param_class"]
     param_class = param_class_path.split("/", -1)[-1]
 
@@ -405,23 +404,55 @@ def _get_setting_conf(setting_conf_prefix, module, module_alias):
     """
     # TODO: support extension
     # roadmap
-    # 1. treat `setting_conf_prefix` as a single file indicate where to find real setting conf directories
-    # 2. use `enterpoint` and `pkg_resourece` to support extension
+    # 1. treat `setting_conf_prefix` as ml_conf
+    # 2. rename `setting_conf_prefix`
+    # 3. use `enterpoint` and `pkg_resourece` to support extension
     #
-    _module_setting_path = os.path.join(setting_conf_prefix, module + ".json")
-    if not os.path.isfile(_module_setting_path):
+
+    # extensions field in ml_conf:
+    # - name: buildin
+    #   setting_conf_base: "federatedml/conf/setting_conf"
+    #   auth_conf_base: "python/federatedml/transfer_variable/auth_conf"
+    # typing alias:
+    _ExtensionType = typing.List[typing.MutableMapping[str, str]]
+
+    with open(setting_conf_prefix) as f:
+        extensions: _ExtensionType = yaml.safe_load(f).get("extensions", [])
+
+    # base directory for those relative paths in ml_conf
+    _ml_conf_dir = os.path.abspath(
+        os.path.join(setting_conf_prefix, os.path.pardir, os.path.pardir)
+    )
+
+    def _as_absolute(_p):
+        _abs_path = _p
+        if not os.path.exists(_abs_path):
+            _abs_path = os.path.join(_ml_conf_dir, _p)
+        if not os.path.exists(_abs_path):
+            raise FileNotFoundError(f"path {_p} not exists, please check ml_conf.yaml")
+        return _abs_path
+
+    setting_conf_bases = [
+        _as_absolute(extension["setting_conf_base"]) for extension in extensions
+    ]
+
+    # search modules in all setting conf bases
+    _module_setting_path = None
+    for base_dir in setting_conf_bases:
+        _module_setting_path = os.path.join(base_dir, module + ".json")
+        if os.path.exists(_module_setting_path):
+            break
+    if _module_setting_path is None or not os.path.isfile(_module_setting_path):
         raise ModuleNotExistError(component=module_alias, module=module)
 
-    _module_setting = None
-    fin = None
+    # load setting conf
     try:
-        fin = open(_module_setting_path, "r")
-        _module_setting = json.loads(fin.read())
+        with open(_module_setting_path, "r") as fin:
+            _module_setting = json.loads(fin.read())
     except Exception as e:
-        raise ModuleConfigError(component=module_alias, module=module, other_info=e)
-    finally:
-        if fin:
-            fin.close()
+        raise ModuleConfigError(
+            component=module_alias, module=module, other_info=e
+        ) from e
 
     return _module_setting
 

@@ -1,0 +1,4 @@
+extensions:
+  - name: buildin
+    setting_conf_base: "federatedml/conf/setting_conf"
+    auth_conf_base: "python/federatedml/transfer_variable/auth_conf"

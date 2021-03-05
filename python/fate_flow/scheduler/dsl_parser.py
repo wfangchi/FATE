@@ -936,7 +936,12 @@ class BaseDSLParser(object):
         return None, None
 
     @staticmethod
-    def generate_predict_conf_template(train_dsl, train_conf, model_id, model_version):
+    def generate_predict_conf_template(
+        predict_dsl, train_conf, model_id, model_version
+    ):
+        raise NotImplementedError
+
+    def get_predict_dsl(self, role, predict_dsl=None, setting_conf_prefix=None):
         raise NotImplementedError
 
 
