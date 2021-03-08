@@ -156,12 +156,12 @@ class Base(object):
 
 
 class TrainLRModel(Base):
-    def get_component_metrics(self, metric_output_path, arbiter_party_id, file=None):
+    def get_component_metrics(self, metric_output_path, file=None):
         post_data = {
             "job_id": self.job_id,
-            "role": "arbiter",
-            "party_id": arbiter_party_id,
-            "component_name": self.component_name
+            "role": "guest",
+            "party_id": self.guest_party_id[0],
+            "component_name": "evaluation_0"
         }
         response = requests.post("/".join([self.server_url, "tracking", "component/metric/all"]), json=post_data)
         if response.status_code == 200:
