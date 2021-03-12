@@ -96,8 +96,8 @@ def main(config="../../config.yaml", param='./xgb_config_binary.yaml', namespace
     job_parameters = JobParameters(backend=backend, work_mode=work_mode)
     pipeline.fit(job_parameters)
 
-    sbt_0_data = pipeline.get_component("hetero_secure_boost_0").get_output_data().get("data")
-    sbt_1_data = pipeline.get_component("hetero_secure_boost_1").get_output_data().get("data")
+    sbt_0_data = pipeline.get_component("homo_secureboost_0").get_output_data().get("data")
+    sbt_1_data = pipeline.get_component("homo_secureboost_1").get_output_data().get("data")
     sbt_0_score = extract_data(sbt_0_data, "predict_result")
     sbt_0_label = extract_data(sbt_0_data, "label")
     sbt_1_score = extract_data(sbt_1_data, "predict_result")
@@ -116,11 +116,11 @@ def main(config="../../config.yaml", param='./xgb_config_binary.yaml', namespace
             "ks_2samp": classification_metric.KSTest.compute(sbt_0_score, sbt_1_score),
             "mAP_D_value": classification_metric.AveragePrecisionScore().compute(sbt_0_score, sbt_1_score, sbt_0_label,
                                                                                  sbt_1_label)}
-        metric_summary["distribution_metrics"] = {"hetero_sbt": metric_sbt}
+        metric_summary["distribution_metrics"] = {"homo_sbt": metric_sbt}
     elif param['eval_type'] == "multi":
         metric_sbt = {
             "score_diversity_ratio": classification_metric.Distribution.compute(sbt_0_score_label, sbt_1_score_label)}
-        metric_summary["distribution_metrics"] = {"hetero_sbt": metric_sbt}
+        metric_summary["distribution_metrics"] = {"homo_sbt": metric_sbt}
 
     data_summary = {"train": {"guest": guest_train_data["name"], "host": host_train_data["name"]},
                     "test": {"guest": guest_train_data["name"], "host": host_train_data["name"]}

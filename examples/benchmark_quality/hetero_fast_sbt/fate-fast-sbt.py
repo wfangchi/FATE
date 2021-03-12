@@ -121,19 +121,19 @@ def main(config="../../config.yaml", param="./xgb_config_binary.yaml", namespace
     if param['eval_type'] == "regression":
         desc_sbt_0 = regression_metric.Describe().compute(sbt_0_score)
         desc_sbt_1 = regression_metric.Describe().compute(sbt_1_score)
-        metric_summary["script_metrics"] = {"hetero_sbt_train": desc_sbt_0,
-                                            "hetero_sbt_validate": desc_sbt_1}
+        metric_summary["script_metrics"] = {"hetero_fast_sbt_train": desc_sbt_0,
+                                            "hetero_fast_sbt_validate": desc_sbt_1}
     elif param['eval_type'] == "binary":
         metric_sbt = {
             "score_diversity_ratio": classification_metric.Distribution.compute(sbt_0_score_label, sbt_1_score_label),
             "ks_2samp": classification_metric.KSTest.compute(sbt_0_score, sbt_1_score),
             "mAP_D_value": classification_metric.AveragePrecisionScore().compute(sbt_0_score, sbt_1_score, sbt_0_label,
                                                                                  sbt_1_label)}
-        metric_summary["distribution_metrics"] = {"hetero_sbt": metric_sbt}
+        metric_summary["distribution_metrics"] = {"hetero_fast_sbt": metric_sbt}
     elif param['eval_type'] == "multi":
         metric_sbt = {
             "score_diversity_ratio": classification_metric.Distribution.compute(sbt_0_score_label, sbt_1_score_label)}
-        metric_summary["distribution_metrics"] = {"hetero_sbt": metric_sbt}
+        metric_summary["distribution_metrics"] = {"hetero_fast_sbt": metric_sbt}
 
     data_summary = {"train": {"guest": guest_train_data["name"], "host": host_train_data["name"]},
                     "test": {"guest": guest_train_data["name"], "host": host_train_data["name"]}

@@ -125,11 +125,11 @@ def main(config="../../config.yaml", param="param_conf.yaml", namespace=""):
             "ks_2samp": classification_metric.KSTest.compute(nn_0_score, nn_1_score),
             "mAP_D_value": classification_metric.AveragePrecisionScore().compute(nn_0_score, nn_1_score, nn_0_label,
                                                                                  nn_1_label)}
-        metric_summary["distribution_metrics"] = {"hetero_nn": metric_nn}
+        metric_summary["distribution_metrics"] = {"homo_nn": metric_nn}
     elif eval_type == "multi":
         metric_nn = {
             "score_diversity_ratio": classification_metric.Distribution.compute(nn_0_score_label, nn_1_score_label)}
-        metric_summary["distribution_metrics"] = {"hetero_nn": metric_nn}
+        metric_summary["distribution_metrics"] = {"homo_nn": metric_nn}
 
     data_summary = dict(
         train={"guest": guest_train_data["name"], **{f"host_{i}": host_train_data[i]["name"] for i in range(num_host)}},

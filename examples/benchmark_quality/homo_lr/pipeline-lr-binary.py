@@ -141,8 +141,8 @@ def main(config="../../config.yaml", param="./breast_lr_config.yaml", namespace=
                     "test": {"guest": guest_train_data["name"], "host": host_train_data["name"]}
                     }
     result_summary = pipeline.get_component("evaluation_0").get_summary()
-    lr_0_data = pipeline.get_component("hetero_lr_0").get_output_data().get("data")
-    lr_1_data = pipeline.get_component("hetero_lr_1").get_output_data().get("data")
+    lr_0_data = pipeline.get_component("homo_lr_0").get_output_data().get("data")
+    lr_1_data = pipeline.get_component("homo_lr_1").get_output_data().get("data")
     lr_0_score = extract_data(lr_0_data, "predict_result")
     lr_0_label = extract_data(lr_0_data, "label")
     lr_1_score = extract_data(lr_1_data, "predict_result")
@@ -154,7 +154,7 @@ def main(config="../../config.yaml", param="./breast_lr_config.yaml", namespace=
         "ks_2samp": classification_metric.KSTest.compute(lr_0_score, lr_1_score),
         "mAP_D_value": classification_metric.AveragePrecisionScore().compute(lr_0_score, lr_1_score, lr_0_label,
                                                                              lr_1_label)}
-    result_summary["distribution_metrics"] = {"hetero_lr": metric_lr}
+    result_summary["distribution_metrics"] = {"homo_lr": metric_lr}
 
     return data_summary, result_summary
 
