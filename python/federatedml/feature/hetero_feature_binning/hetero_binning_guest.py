@@ -47,11 +47,11 @@ class HeteroFeatureBinningGuest(BaseFeatureBinning):
             return self.data_output
 
         label_counts = data_overview.get_label_count(data_instances)
-        if len(label_counts) > 2:
+        if len(label_counts) != 2:
             raise ValueError("Iv calculation support binary-data only in this version.")
 
-        data_instances = data_instances.mapValues(self.load_data)
-        self.set_schema(data_instances)
+        # data_instances = data_instances.mapValues(self.load_data)
+        # self.set_schema(data_instances)
         label_table = data_instances.mapValues(lambda x: x.label)
 
         if self.model_param.local_only:
