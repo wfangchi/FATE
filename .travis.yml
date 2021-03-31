@@ -10,8 +10,8 @@ notifications:
 
 matrix:
   include:
-      # - env: OS='centos:7'
-    - env: OS='ubuntu:18.04' 
+    - env: OS='centos:7'
+      # - env: OS='ubuntu:18.04' 
 
   include:
     - language: python
