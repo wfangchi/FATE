@@ -27,8 +27,7 @@ script:
   - sed -i.bak "s/sh  service.sh/bash service.sh/g" init.sh
   - sh init.sh init
   - ls -alh
-  - ls -alh
-  - python -m pip install coverage
+  - python -m pip list
   - conda install -c conda-forge codecov --yes
   - source bin/init_env.sh
   - bash ./python/federatedml/test/run_test.sh
