@@ -28,7 +28,7 @@ script:
   - sh init.sh init
   - ls -alh
   - source bin/init_env.sh
-  - pip install codecov
+  - python -m pip install codecov
   - bash ./python/federatedml/test/run_test.sh
 after_success:
   - conda install -c conda-forge codecov --yes
