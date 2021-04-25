@@ -1,14 +1,27 @@
 from federatedml.secureprotol.fixedpoint import FixedPointNumber
-from federatedml.secureprotol import PaillierEncrypt
+from federatedml.secureprotol import PaillierEncrypt, IterativeAffineEncrypt
 from federatedml.secureprotol.fate_paillier import PaillierEncryptedNumber
 import math
 
 VERY_SMALL_FLOAT = -0.000000000001  # for computing edge cases
 
+def get_homo_encryption_max_int(encrypter):
 
-def suggest_parameters(paillier_max_int: int, sample_num: int, precision=2**53, g_max=1.0, g_min=-1.0, h_max=1.0):
+    max_int = 0
+    if type(encrypter) == PaillierEncrypt:
+        max_int = encrypter.public_key.max_int
+    elif type(encrypter) == IterativeAffineEncrypt:
+        n_array = encrypter.key.n_array
+        allowed_max_int = n_array[0]
+        max_int = int(allowed_max_int * 0.9) - 1  # the other 0.1 part is for negative num
+    else:
+        raise ValueError('unknown encryption type')
 
-    p_bit_len = paillier_max_int.bit_length()
+    return max_int
+
+def suggest_parameters(homo_encryption_max_int: int, sample_num: int, precision=2 ** 53, g_max=1.0, g_min=-1.0, h_max=1.0):
+
+    p_bit_len = homo_encryption_max_int.bit_length()
     # make sure that combined plaintext is always smaller than paillier max_int
     available_bit = p_bit_len - 1
     # h is always larger than 0, compute bits fix point number needed
@@ -18,11 +31,12 @@ def suggest_parameters(paillier_max_int: int, sample_num: int, precision=2**53, 
     # in case fixed point num overflow, compute the bit length of edge case: max_encoding_num * sample_num
     h_max_encoding_edge_int = FixedPointNumber.encode(h_max, precision=precision).encoding * sample_num
     h_max_encoding_edge_int_bit_len = h_max_encoding_edge_int.bit_length()
-    h_assign_bit = 0
+
     if h_max_encoding_edge_int_bit_len > h_n_bit_len:
         h_assign_bit = h_max_encoding_edge_int_bit_len + 1
     else:
         h_assign_bit = h_n_bit_len + 1
+
     assert h_assign_bit < available_bit, 'paillier key length is too small to conduct h packing'
     print('rs {} {} {}'.format(h_n_bit_len, h_max_encoding_edge_int_bit_len, h_assign_bit))
     # g contains positive and negative numbers, need to take negative case into consideration
